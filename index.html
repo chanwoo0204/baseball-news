@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>야구 매거진</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@500;600;700&display=swap">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <!-- 상단 줄: 메뉴 버튼 · 검색 버튼 / 로고 / 로그인 -->
+  <header class="top">
+    <div class="top-left">
+      <button class="icon-btn" id="menuOpen" type="button" aria-label="메뉴 열기" aria-controls="drawer" aria-expanded="false">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6.5h18M3 12h18M3 17.5h18"/></svg>
+      </button>
+      <button class="icon-btn" id="searchOpen" type="button" aria-label="검색 열기">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"/><path d="M15.5 15.5L21 21"/></svg>
+      </button>
+    </div>
+    <a class="logo" href="#/" id="logo">BASEBALL MAG</a>
+    <div class="top-right">
+      <!-- 넓은 화면에서만 보이는 메뉴 -->
+      <nav class="top-nav" aria-label="주 메뉴">
+        <a href="#/" data-nav="news">뉴스</a>
+        <a href="#/board" data-nav="board">게시판</a>
+        <a href="#/store" data-nav="store">매거진 구매</a>
+      </nav>
+      <a href="#/login" id="authLink">로그인</a>
+    </div>
+  </header>
+
+  <!-- 왼쪽에서 열리는 메뉴 -->
+  <div class="scrim" id="scrim" hidden></div>
+  <aside class="drawer" id="drawer" aria-label="메뉴" inert>
+    <div class="drawer-top">
+      <button class="icon-btn" id="menuClose" type="button" aria-label="메뉴 닫기">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 5l14 14M19 5L5 19"/></svg>
+      </button>
+      <form class="search" id="searchForm" role="search">
+        <input type="search" name="q" placeholder="기사, 게시글 검색" aria-label="검색어" maxlength="50">
+        <button class="icon-btn" type="submit" aria-label="검색">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"/><path d="M15.5 15.5L21 21"/></svg>
+        </button>
+      </form>
+    </div>
+
+    <nav class="menu">
+      <a href="#/" data-nav="news">뉴스</a>
+      <a href="#/board" data-nav="board">게시판</a>
+      <a href="#/store" data-nav="store">매거진 구매</a>
+      <a href="#/login" data-nav="login" id="drawerAuth">로그인</a>
+    </nav>
+
+    <!-- 카테고리 목록은 js/config.js 의 CATEGORIES 로 채워집니다 -->
+    <div class="drawer-cats" id="drawerCats"></div>
+
+    <div class="drawer-foot">
+      <a class="insta" id="instaLink" target="_blank" rel="noopener" aria-label="인스타그램으로 이동">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 8.5h4l1.6-2.5h5.8l1.6 2.5h4v10.5h-17z"/><circle cx="12" cy="13.5" r="3.6"/></svg>
+        <span>Instagram</span>
+      </a>
+      <!-- 관리자로 로그인했을 때만 보입니다 -->
+      <a class="admin-link" id="adminLink" href="#/admin" hidden>기사 관리</a>
+    </div>
+  </aside>
+
+  <!-- 화면 내용은 js/app.js 가 이 안에 그려 넣습니다 -->
+  <main id="app"></main>
+
+  <!-- 순서 중요: Supabase 라이브러리 → 설정 → 데이터 → 화면 -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="js/config.js"></script>
+  <script src="js/data.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
