@@ -7,9 +7,33 @@
 (function () {
   const cfg = window.SITE_CONFIG || {};
   const live = !!(cfg.SUPABASE_URL && cfg.SUPABASE_ANON_KEY && window.supabase);
-  const db = live ? window.supabase.createClient(cfg.SUPABASE_URL, cfg.SUPABASE_ANON_KEY) : null;
+  // flowType 'pkce': 네이버 로그인 후 돌아올 때 주소의 # 부분(화면 주소)을 건드리지 않게 합니다
+  const db = live
+    ? window.supabase.createClient(cfg.SUPABASE_URL, cfg.SUPABASE_ANON_KEY, { auth: { flowType: 'pkce' } })
+    : null;
   const PAGE_SIZE = 20;      // 게시판 한 쪽에 보이는 글 수
-  const NOTICE = '공지';     // 공지 말머리 (관리자만 쓸 수 있음)
+  const NOTICE = '공지';     // 공지 말머리 (운영진만 쓸 수 있음)
+  // 신고 사유 (DB 규칙과 같은 목록이어야 합니다)
+  const REPORT_REASONS = [
+    ['spam', '스팸·광고·홍보'],
+    ['abuse', '욕설·비하·혐오 표현'],
+    ['sexual', '음란·선정적인 내용'],
+    ['privacy', '개인정보 노출'],
+    ['flood', '도배·같은 내용 반복'],
+    ['false', '허위 사실·사칭'],
+    ['other', '기타'],
+  ];
+  const ART_COLS = 'id,title,summary,category,image_url,author_name,main_slot,created_at,comments(count)';
+
+  // 메인 배치: 1=큰 기사, 2·3=옆 기사. 빈 자리는 최신 기사로 채웁니다
+  function arrangeHome(slotted, latest) {
+    const slots = [null, null, null];
+    slotted.forEach((a) => { if (a.main_slot >= 1 && a.main_slot <= 3) slots[a.main_slot - 1] = a; });
+    const used = slots.filter(Boolean).map((a) => a.id);
+    const rest = latest.filter((a) => used.indexOf(a.id) === -1);
+    for (let i = 0; i < 3; i++) if (!slots[i] && rest.length) slots[i] = rest.shift();
+    return slots.filter(Boolean).concat(rest);
+  }
 
   // Supabase 가 돌려준 줄에서 댓글 수를 꺼내 정리
   function norm(row) {
@@ -34,11 +58,18 @@
     // 기사
     async listArticles(category, limit) {
       let q = db.from('articles')
-        .select('id,title,summary,category,image_url,created_at,comments(count)')
+        .select(ART_COLS)
         .order('created_at', { ascending: false })
         .limit(limit || 60);
       if (category) q = q.eq('category', category);
       return check(await q).map(norm);
+    },
+    async homeArticles() {
+      const res = await Promise.all([
+        db.from('articles').select(ART_COLS).not('main_slot', 'is', null),
+        db.from('articles').select(ART_COLS).order('created_at', { ascending: false }).limit(15),
+      ]);
+      return arrangeHome(check(res[0]).map(norm), check(res[1]).map(norm));
     },
     async getArticle(id) {
       return check(await db.from('articles').select('*').eq('id', id).maybeSingle());
@@ -100,6 +131,13 @@
       if (!rows.length) throw new Error('삭제 권한이 없습니다.');
     },
 
+    // 신고: 누가 신고했는지는 저장하지 않습니다
+    async createReport(r) {
+      const row = { reason: r.reason, detail: (r.detail || '').slice(0, 300) || null };
+      if (r.post_id) row.post_id = r.post_id; else row.comment_id = r.comment_id;
+      check(await db.from('reports').insert(row));
+    },
+
     // 검색: 제목·요약·본문에 검색어가 들어간 기사와 게시글
     async search(word) {
       const w = like(word);
@@ -118,14 +156,14 @@
       const res = await db.auth.getSession();
       const u = res.data && res.data.session ? res.data.session.user : null;
       if (!u) return null;
-      const nick = u.user_metadata && u.user_metadata.nickname;
-      // admins 표에 내 줄이 있으면 관리자
-      let isAdmin = false;
-      try {
-        const r = await db.from('admins').select('user_id').eq('user_id', u.id).maybeSingle();
-        isAdmin = !!r.data;
-      } catch (e) { /* 표가 없으면 관리자가 아님 */ }
-      return { id: u.id, email: u.email, nickname: nick || String(u.email).split('@')[0], isAdmin: isAdmin };
+      // 닉네임·역할·정지 여부는 profiles 표에 있습니다
+      const r = await db.from('profiles').select('nickname,role,banned').eq('id', u.id).maybeSingle();
+      const p = r.data || { nickname: '', role: 'member', banned: false };
+      return {
+        id: u.id, email: u.email || '', nickname: (p.nickname || '').trim(),
+        role: p.role, banned: !!p.banned,
+        isAdmin: p.role === 'admin', isStaff: p.role === 'admin' || p.role === 'reporter',
+      };
     },
     async signIn(email, password) {
       const res = await db.auth.signInWithPassword({ email: email, password: password });
@@ -142,24 +180,47 @@
     async signOut() {
       await db.auth.signOut();
     },
+    // 네이버 로그인: 네이버 화면으로 갔다가 이 사이트로 돌아옵니다
+    async signInNaver() {
+      const res = await db.auth.signInWithOAuth({
+        provider: 'custom:naver',
+        options: { redirectTo: location.origin + location.pathname },
+      });
+      if (res.error) throw res.error;
+    },
+    // 게시판에 표시될 닉네임 저장
+    async setNickname(nickname) {
+      const u = (await db.auth.getUser()).data.user;
+      if (!u) throw new Error('로그인이 필요합니다.');
+      const rows = check(await db.from('profiles').update({ nickname: nickname }).eq('id', u.id).select('id'));
+      if (!rows.length) throw new Error('닉네임을 저장하지 못했습니다.');
+    },
 
-    // ── 관리자 전용 (DB 규칙이 관리자가 아니면 거부합니다) ──
-    async listAllArticles() {
-      const q = db.from('articles').select('id,title,category,created_at')
+    // ── 운영진 전용 (기자·관리자가 아니면 DB 규칙이 거부합니다) ──
+    async listAllArticles(q) {
+      let query = db.from('articles').select(ART_COLS)
         .order('created_at', { ascending: false }).limit(200);
-      return check(await q);
+      if (q) query = query.ilike('title', '%' + q.replace(/[%_,()]/g, ' ').trim() + '%');
+      return check(await query).map(norm);
     },
     async saveArticle(a) {
       const row = {
-        title: a.title, summary: a.summary || null, body: a.body,
+        title: a.title, summary: a.summary || null, body: a.body, format: 'html',
         category: a.category, image_url: a.image_url || null,
+        image_caption: a.image_caption || null, author_name: a.author_name || null,
       };
-      if (a.id) return check(await db.from('articles').update(row).eq('id', a.id).select().single());
-      return check(await db.from('articles').insert(row).select().single());
+      const saved = a.id
+        ? check(await db.from('articles').update(row).eq('id', a.id).select().single())
+        : check(await db.from('articles').insert(row).select().single());
+      if ('slot' in a) await remote.setMainSlot(saved.id, a.slot);
+      return saved;
+    },
+    async setMainSlot(id, slot) {
+      check(await db.rpc('set_main_slot', { aid: id, slot: slot || null }));
     },
     async deleteArticle(id) {
       const rows = check(await db.from('articles').delete().eq('id', id).select('id'));
-      if (!rows.length) throw new Error('삭제되지 않았습니다. 관리자 권한을 확인해 주세요.');
+      if (!rows.length) throw new Error('삭제되지 않았습니다. 권한을 확인해 주세요.');
     },
     async uploadImage(file) {
       const ext = (String(file.name).split('.').pop() || 'jpg').toLowerCase().replace(/[^a-z0-9]/g, '') || 'jpg';
@@ -167,6 +228,41 @@
       const res = await db.storage.from('images').upload(path, file, { cacheControl: '31536000', contentType: file.type });
       if (res.error) throw res.error;
       return db.storage.from('images').getPublicUrl(path).data.publicUrl;
+    },
+    async listMembers(q) {
+      let query = db.from('profiles').select('id,nickname,role,banned,created_at')
+        .order('created_at', { ascending: false }).limit(300);
+      if (q) query = query.ilike('nickname', '%' + q.replace(/[%_,()]/g, ' ').trim() + '%');
+      return check(await query);
+    },
+    async setMember(id, role, banned) {
+      check(await db.rpc('staff_set_member', { uid: id, new_role: role, new_banned: banned }));
+    },
+    async listAllPosts(q) {
+      let query = db.from('posts').select(POST_COLS)
+        .order('created_at', { ascending: false }).limit(200);
+      if (q) query = query.ilike('title', '%' + q.replace(/[%_,()]/g, ' ').trim() + '%');
+      return check(await query).map(norm);
+    },
+    async listReports(status) {
+      const q = db.from('reports')
+        .select('id,reason,detail,status,created_at,post_id,comment_id,posts(id,title,nickname),comments(id,body,nickname,post_id,article_id)')
+        .eq('status', status || 'open')
+        .order('created_at', { ascending: false }).limit(300);
+      return check(await q);
+    },
+    async countOpenReports() {
+      const res = await db.from('reports').select('id', { count: 'exact', head: true }).eq('status', 'open');
+      return res.error ? 0 : (res.count || 0);
+    },
+    async resolveReports(ids) {
+      check(await db.from('reports').update({ status: 'done' }).in('id', ids));
+    },
+    async listRecentComments(limit) {
+      const q = db.from('comments')
+        .select('id,body,nickname,user_id,created_at,post_id,article_id,posts(title),articles(title)')
+        .order('created_at', { ascending: false }).limit(limit || 100);
+      return check(await q);
     },
   };
 
@@ -207,9 +303,15 @@
     async getUser() { return null; },
     async signOut() {},
     async listAllArticles() { return SAMPLE_ARTICLES; },
+    async homeArticles() { return SAMPLE_ARTICLES.slice(0, 15); },
+    async listMembers() { return []; },
+    async listRecentComments() { return []; },
+    async listAllPosts() { return []; },
+    async listReports() { return []; },
+    async countOpenReports() { return 0; },
     createPost: noDb, deletePost: noDb, createComment: noDb, deleteComment: noDb,
-    signIn: noDb, signUp: noDb, saveArticle: noDb, deleteArticle: noDb, uploadImage: noDb,
+    signIn: noDb, signUp: noDb, signInNaver: noDb, setNickname: noDb, setMainSlot: noDb, setMember: noDb, createReport: noDb, resolveReports: noDb, saveArticle: noDb, deleteArticle: noDb, uploadImage: noDb,
   };
 
-  window.API = Object.assign({ live: live, NOTICE: NOTICE }, live ? remote : local);
+  window.API = Object.assign({ live: live, NOTICE: NOTICE, REPORT_REASONS: REPORT_REASONS }, live ? remote : local);
 })();

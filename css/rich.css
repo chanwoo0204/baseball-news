@@ -1,0 +1,25 @@
+/* 기사 본문 서식 — 사이트 기사 화면과 관리자 편집기가 함께 씁니다 */
+.rich {
+  font-size: var(--fs, 18px); line-height: 1.85; color: #222;
+  word-break: keep-all; overflow-wrap: anywhere;
+}
+.rich > * { margin: 0 0 1.35em; }
+.rich > *:last-child { margin-bottom: 0; }
+.rich h2 { font-size: 1.28em; font-weight: 700; line-height: 1.45; letter-spacing: -0.02em; margin: 2em 0 0.75em; color: #111; }
+.rich h3 { font-size: 1.1em; font-weight: 700; margin: 1.6em 0 0.6em; }
+.rich blockquote {
+  margin: 1.9em 0; padding: 0.15em 0 0.15em 1.1em;
+  border-left: 3px solid #10264a; color: #3a3a3a; font-weight: 500;
+}
+.rich a { color: #10264a; text-decoration: underline; text-underline-offset: 3px; }
+.rich ul, .rich ol { padding-left: 1.3em; }
+.rich li { margin: 0.3em 0; }
+.rich hr { border: 0; height: 1px; background: #e2e2e2; margin: 2.4em 0; }
+.rich figure { margin: 2.2em 0; }
+.rich img { display: block; width: 100%; height: auto; }
+.rich figcaption { font-size: 13px; line-height: 1.6; color: #8a8a8a; margin-top: 10px; }
+.rich .f-sans { font-family: 'Pretendard', -apple-system, 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif; }
+.rich .f-serif { font-family: 'Noto Serif KR', 'Nanum Myeongjo', 'AppleMyungjo', 'Batang', serif; }
+.rich .s-sm { font-size: 0.88em; }
+.rich .s-lg { font-size: 1.18em; }
+.rich .s-xl { font-size: 1.4em; line-height: 1.5; }
