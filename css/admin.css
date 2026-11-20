@@ -103,6 +103,7 @@ body.ready .adm-nav { visibility: visible; }
 .toolbar .sep { width: 1px; height: 18px; background: var(--line); margin: 0 6px; }
 .editor { min-height: 420px; outline: none; padding: 4px 2px 20px; --fs: 17px; }
 .editor img { cursor: default; }
+.editor iframe { pointer-events: none; }
 .editor figcaption { min-height: 1.6em; background: #f6f6f8; padding: 4px 8px; border-radius: 4px; }
 .editor figcaption:empty::before { content: '사진 설명 (선택)'; color: #b0b0b5; }
 .write-main .hint { margin: 8px 0 0; padding-top: 12px; border-top: 1px solid var(--line); }

@@ -9,11 +9,16 @@
     P: [], H2: [], H3: [], STRONG: [], B: [], EM: [], I: [], U: [], S: [],
     BLOCKQUOTE: [], UL: [], OL: [], LI: [], A: ['href'], BR: [], HR: [],
     FIGURE: [], FIGCAPTION: [], IMG: ['src', 'alt'], SPAN: ['class'], DIV: [],
+    VIDEO: ['src'], IFRAME: ['src'],
   };
   // 내용째 지울 태그
-  const DROP = /^(SCRIPT|STYLE|IFRAME|OBJECT|EMBED|TEMPLATE|FORM|INPUT|BUTTON|TEXTAREA|SELECT|LINK|META|SVG|MATH|NOSCRIPT|VIDEO|AUDIO|CANVAS|TITLE|HEAD)$/;
+  const DROP = /^(SCRIPT|STYLE|OBJECT|EMBED|TEMPLATE|FORM|INPUT|BUTTON|TEXTAREA|SELECT|LINK|META|SVG|MATH|NOSCRIPT|AUDIO|CANVAS|TITLE|HEAD)$/;
   // 글꼴·크기용으로 허용한 class
-  const CLASSES = ['f-sans', 'f-serif', 's-sm', 's-lg', 's-xl'];
+  const CLASSES = ['f-sans', 'f-serif', 's-sm', 's-lg', 's-xl',
+    's-10', 's-11', 's-12', 's-14', 's-16', 's-18', 's-20', 's-24', 's-28',
+    'c-black', 'c-gray', 'c-navy', 'c-blue', 'c-red', 'c-orange', 'c-green'];
+  // 유튜브 영상만 넣을 수 있습니다
+  const YT = /^https:\/\/www\.youtube(-nocookie)?\.com\/embed\/[\w-]{6,20}(\?[\w=&-]*)?$/;
   const okUrl = (u) => /^https?:\/\/\S+$/i.test(String(u || '').trim());
 
   function unwrap(node) { node.replaceWith(...Array.from(node.childNodes)); }
@@ -39,6 +44,21 @@
         if (!okUrl(node.getAttribute('src'))) { node.remove(); return; }
         node.setAttribute('loading', 'lazy');
       }
+      if (tag === 'IFRAME') {
+        if (!YT.test(node.getAttribute('src') || '')) { node.remove(); return; }
+        node.setAttribute('allowfullscreen', '');
+        node.setAttribute('loading', 'lazy');
+        node.setAttribute('title', '동영상');
+        node.setAttribute('allow', 'accelerometer; encrypted-media; gyroscope; picture-in-picture');
+        node.setAttribute('referrerpolicy', 'strict-origin-when-cross-origin');
+      }
+      if (tag === 'VIDEO') {
+        if (!okUrl(node.getAttribute('src'))) { node.remove(); return; }
+        node.textContent = '';
+        node.setAttribute('controls', '');
+        node.setAttribute('playsinline', '');
+        node.setAttribute('preload', 'metadata');
+      }
       if (tag === 'SPAN') {
         const cls = (node.getAttribute('class') || '').split(/\s+/).filter((c) => CLASSES.indexOf(c) !== -1);
         if (cls.length) node.setAttribute('class', cls.join(' '));
@@ -60,5 +80,11 @@
       .map((p) => '<p>' + esc(p).replace(/\n/g, '<br>') + '</p>').join('');
   }
 
-  window.Rich = { sanitize: sanitize, fromText: fromText };
+  // 유튜브 주소를 넣을 수 있는 형식으로 바꿉니다 (아니면 빈 값)
+  function youtubeEmbed(url) {
+    const m = String(url || '').trim().match(/(?:youtu\.be\/|youtube\.com\/(?:watch\?(?:.*&)?v=|shorts\/|embed\/|live\/))([\w-]{6,20})/);
+    return m ? 'https://www.youtube-nocookie.com/embed/' + m[1] : '';
+  }
+
+  window.Rich = { sanitize: sanitize, fromText: fromText, youtubeEmbed: youtubeEmbed };
 })();

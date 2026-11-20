@@ -44,9 +44,10 @@ h1, h2, h3 { margin: 0; }
 }
 .top-left { display: flex; align-items: center; }
 .top-right { justify-self: end; display: flex; align-items: center; gap: 26px; padding-right: 8px; font-size: 14px; font-weight: 600; }
-.top-nav { display: none; gap: 26px; }
+.top-nav { display: flex; gap: 26px; }
 #authLink { display: inline-block; max-width: 110px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.logo { font-weight: 800; font-size: 20px; letter-spacing: 0.08em; white-space: nowrap; transition: letter-spacing 0.5s var(--ease); }
+.logo { display: inline-flex; align-items: center; gap: 9px; font-weight: 800; font-size: 20px; letter-spacing: 0.06em; white-space: nowrap; transition: letter-spacing 0.5s var(--ease); }
+.logo-mark { height: 34px; width: auto; transition: transform 0.5s var(--ease); }
 
 /* 밑줄이 왼쪽에서 그어지는 링크 */
 .top-right a, .chip { position: relative; padding: 4px 0; }
@@ -151,6 +152,18 @@ h1, h2, h3 { margin: 0; }
 .store-card-small { font-size: 12px; font-weight: 600; opacity: 0.75; }
 .store-card strong { font-weight: 800; font-size: 26px; line-height: 1.3; letter-spacing: -0.04em; margin: 6px 0 18px; }
 .store-card-go { align-self: flex-start; font-size: 13px; font-weight: 700; padding: 10px 16px; border-radius: 999px; background: var(--white); color: var(--accent); transition: transform 0.3s var(--ease); }
+
+/* 첫 화면 아래 길게: 매거진 구매 */
+.store-wide {
+  display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 20px 32px;
+  margin-top: 80px; padding: 40px 44px; border-radius: 16px; color: var(--white); background: var(--accent);
+  background-image: radial-gradient(circle at 92% 10%, rgba(255, 255, 255, 0.16), transparent 50%);
+  transition: transform 0.4s var(--ease), box-shadow 0.4s;
+}
+.store-wide-text { display: grid; gap: 6px; }
+.store-wide small { font-size: 13px; font-weight: 600; opacity: 0.75; }
+.store-wide strong { font-size: 28px; font-weight: 800; line-height: 1.3; letter-spacing: -0.04em; }
+.store-wide-go { flex: none; font-size: 15px; font-weight: 700; padding: 14px 26px; border-radius: 999px; background: var(--white); color: var(--accent); transition: transform 0.3s var(--ease); }
 
 /* ── 일반 페이지 ── */
 .page { max-width: 720px; margin: 0 auto; padding: 44px 20px 96px; }
@@ -296,7 +309,10 @@ a.brow:visited .b-title .t { color: var(--mute); }
 
 /* ── 마우스를 올렸을 때의 움직임 (마우스가 있는 기기에서만) ── */
 @media (hover: hover) {
-  .logo:hover { letter-spacing: 0.14em; }
+  .logo:hover { letter-spacing: 0.1em; }
+  .logo:hover .logo-mark { transform: rotate(-6deg) scale(1.06); }
+  .store-wide:hover { transform: translateY(-4px); box-shadow: 0 16px 40px rgba(16, 38, 74, 0.25); }
+  .store-wide:hover .store-wide-go { transform: translateX(6px); }
   .top-right a:hover::after, .chip:hover::after { transform: scaleX(1); }
   .chip:hover { color: var(--ink); }
   .icon-btn:hover { background: var(--soft); }
@@ -352,7 +368,13 @@ a.brow:visited .b-title .t { color: var(--mute); }
 @media (max-width: 640px) {
   :root { --top: 56px; }
   .top { padding: 0 6px; }
-  .logo { font-size: 16px; }
+  .logo { font-size: 15px; gap: 6px; letter-spacing: 0.03em; }
+  .logo-mark { height: 26px; }
+  .top-right { gap: 14px; padding-right: 4px; font-size: 13px; }
+  .top-nav { gap: 14px; }
+  .top-nav [data-nav="news"], .top-nav [data-nav="store"] { display: none; }
+  .store-wide { margin-top: 56px; padding: 28px 24px; }
+  .store-wide strong { font-size: 22px; }
   .menu a { font-size: 32px; }
   .page { padding-top: 28px; }
   .page h1, .article h1 { font-size: 26px; }

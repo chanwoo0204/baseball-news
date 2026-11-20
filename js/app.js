@@ -119,24 +119,21 @@
   }
 
   // ── 첫 화면 ─────────────────────────────────
+  function storeWide() {
+    const url = safeUrl(cfg.STORE_URL);
+    return '<a class="store-wide" ' + (url ? 'href="' + esc(url) + '" target="_blank" rel="noopener"' : 'href="#/store"') + '>' +
+      '<span class="store-wide-text"><small>종이 매거진</small><strong>이번 호 매거진, 종이로 소장하세요</strong></span>' +
+      '<span class="store-wide-go">매거진 구매하러 가기</span>' +
+    '</a>';
+  }
   async function viewHome() {
-    const res = await Promise.all([
-      API.homeArticles(),
-      API.listPosts({ size: 6, noNotices: true }).catch(() => ({ rows: [] })),
-    ]);
-    const list = res[0];
-    const posts = res[1].rows;
+    const list = await API.homeArticles();
     if (!list.length) {
-      return chips('') + '<div class="wide"><p class="notice">아직 올라온 기사가 없습니다.</p></div>';
+      return chips('') + '<div class="wide"><p class="notice">아직 올라온 기사가 없습니다.</p>' + storeWide() + '</div>';
     }
     const lead = list[0];
     const side = list.slice(1, 3);
     const rest = list.slice(3);
-    const postRows = posts.map((p) =>
-      '<a class="mini" href="#/board/' + p.id + '">' +
-        '<span class="mini-title"><span>' + esc(p.title) + '</span>' +
-          (p.comment_count ? '<em>[' + p.comment_count + ']</em>' : '') + '</span>' +
-        '<span class="mini-date">' + fmtDate(p.created_at) + '</span></a>').join('');
     return chips('') +
       '<div class="wide">' +
         '<section class="top-stories' + (side.length ? '' : ' solo') + '">' +
@@ -147,17 +144,7 @@
           ? '<section><h2 class="sec">최신 기사</h2><div class="grid">' +
               rest.map((a) => story(a, 'grid')).join('') + '</div></section>'
           : '') +
-        '<section class="home-bottom">' +
-          '<div>' +
-            '<h2 class="sec"><a href="#/board">게시판</a></h2>' +
-            '<div class="minis">' + (postRows || '<p class="notice">아직 글이 없습니다. 첫 글을 남겨 보세요.</p>') + '</div>' +
-          '</div>' +
-          '<a class="store-card" href="#/store">' +
-            '<span class="store-card-small">종이 매거진</span>' +
-            '<strong>이번 호 매거진,<br>종이로 읽기</strong>' +
-            '<span class="store-card-go">스마트스토어에서 구매</span>' +
-          '</a>' +
-        '</section>' +
+        storeWide() +
       '</div>';
   }
 
@@ -747,8 +734,9 @@
   }
 
   const logo = document.getElementById('logo');
-  if (logo && cfg.SITE_NAME) {
-    logo.textContent = cfg.SITE_NAME;
+  const logoText = document.getElementById('logoText');
+  if (logoText && cfg.SITE_NAME) {
+    logoText.textContent = cfg.SITE_NAME;
     document.title = cfg.SITE_NAME;
   }
   setupChrome();

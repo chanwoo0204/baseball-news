@@ -17,6 +17,9 @@
   const CATEGORIES = cfg.CATEGORIES || [];
   const SLOT_NAMES = { 1: '큰 기사', 2: '옆 기사 (위)', 3: '옆 기사 (아래)' };
   const ROLE_NAMES = { member: '회원', reporter: '기자', admin: '관리자' };
+  // 편집기의 글씨 크기(pt)와 색 — css/rich.css · js/rich.js 와 같은 목록
+  const SIZES = [10, 11, 12, 14, 16, 18, 20, 24, 28];
+  const COLORS = [['c-black', '검정', '#111111'], ['c-gray', '회색', '#777777'], ['c-navy', '남색', '#10264a'], ['c-blue', '파랑', '#1e5bd8'], ['c-red', '빨강', '#d0302f'], ['c-orange', '주황', '#e07a00'], ['c-green', '초록', '#1f8a4c']];
   let me = null;
   let dirty = false;      // 쓰던 기사가 저장되지 않았는지
   let lastHash = '';
@@ -131,11 +134,16 @@
       '<select data-style="font" aria-label="글꼴"><option value="">글꼴</option>' +
         '<option value="f-sans">고딕</option><option value="f-serif">명조</option></select>' +
       '<select data-style="size" aria-label="글자 크기"><option value="">크기</option>' +
-        '<option value="s-sm">작게</option><option value="s-md">보통</option>' +
-        '<option value="s-lg">크게</option><option value="s-xl">아주 크게</option></select>' +
+        '<option value="s-md">기본</option>' +
+        SIZES.map((p) => '<option value="s-' + p + '">' + p + 'pt</option>').join('') + '</select>' +
+      '<select data-style="color" aria-label="글씨 색"><option value="">글씨 색</option>' +
+        '<option value="c-none">기본</option>' +
+        COLORS.map((c) => '<option value="' + c[0] + '" style="color:' + c[2] + '">■ ' + c[1] + '</option>').join('') + '</select>' +
       '<span class="sep"></span>' +
       b('ul', '목록', '글머리 목록') + b('link', '링크', '링크 걸기') + b('hr', '구분선', '구분선') +
-      b('image', '사진 넣기', '커서 위치에 사진 넣기') +
+      b('image', '사진', '커서 위치에 사진 넣기') +
+      b('video', '동영상', '커서 위치에 동영상 파일 넣기 (50MB 이하)') +
+      b('youtube', '유튜브', '커서 위치에 유튜브 영상 넣기') +
       '<span class="sep"></span>' +
       b('clear', '서식 지우기', '고른 부분의 서식 지우기') +
     '</div>';
@@ -164,7 +172,8 @@
           toolbar() +
           '<div class="editor rich" id="editor" contenteditable="true" role="textbox" aria-multiline="true" aria-label="본문">' + bodyHtml + '</div>' +
           '<input type="file" id="bodyImage" accept="image/*" hidden>' +
-          '<p class="hint">사진은 커서를 둔 자리에 들어갑니다. 사진 아래 회색 칸에 설명을 쓸 수 있습니다. 다른 곳에서 글을 복사해 붙여넣으면 서식이 정리되어 들어갑니다.</p>' +
+          '<input type="file" id="bodyVideo" accept="video/mp4,video/webm,video/quicktime" hidden>' +
+          '<p class="hint">사진·동영상·유튜브는 커서를 둔 자리에 들어갑니다. 그 아래 회색 칸에 설명을 쓸 수 있습니다. 다른 곳에서 글을 복사해 붙여넣으면 서식이 정리되어 들어갑니다.</p>' +
         '</div>' +
         '<div class="write-side">' +
           '<div class="card box">' +
@@ -220,7 +229,9 @@
       restore();
       document.execCommand('styleWithCSS', false, false);
       document.execCommand('fontName', false, 'bn_' + kind);
-      const family = kind === 'font' ? ['f-sans', 'f-serif'] : ['s-sm', 's-lg', 's-xl'];
+      const family = kind === 'font' ? ['f-sans', 'f-serif']
+        : kind === 'color' ? COLORS.map((c) => c[0])
+          : ['s-sm', 's-lg', 's-xl'].concat(SIZES.map((p) => 's-' + p));
       const made = [];
       editor.querySelectorAll('font[face="bn_' + kind + '"]').forEach((f) => {
         f.querySelectorAll('span').forEach((sp) => {
@@ -228,7 +239,7 @@
           if (!sp.classList.length) sp.replaceWith(...Array.from(sp.childNodes));
         });
         const span = document.createElement('span');
-        if (cls !== 's-md') span.className = cls;
+        if (cls !== 's-md' && cls !== 'c-none') span.className = cls;
         while (f.firstChild) span.appendChild(f.firstChild);
         if (span.className) { f.replaceWith(span); made.push(span); }
         else f.replaceWith(...Array.from(span.childNodes));
@@ -271,6 +282,12 @@
         const url = window.prompt('연결할 주소를 입력하세요 (https:// 로 시작)', 'https://');
         if (url && /^https?:\/\/\S+$/i.test(url.trim())) exec('createLink', url.trim());
       } else if (cmd === 'image') document.getElementById('bodyImage').click();
+      else if (cmd === 'video') document.getElementById('bodyVideo').click();
+      else if (cmd === 'youtube') {
+        const src = Rich.youtubeEmbed(window.prompt('유튜브 영상 주소를 붙여넣으세요', 'https://www.youtube.com/watch?v='));
+        if (src) exec('insertHTML', '<figure><iframe src="' + esc(src) + '"></iframe><figcaption></figcaption></figure><p><br></p>');
+        else toast('유튜브 영상 주소를 확인해 주세요');
+      }
       else if (cmd === 'clear') { exec('removeFormat'); clearSpans(); }
       else exec(cmd);
     });
@@ -289,6 +306,22 @@
       try {
         insertFigure(await upload(file));
         toast('사진을 넣었습니다. 사진 아래에 설명을 쓸 수 있습니다.');
+      } catch (err) { fail(err); }
+    });
+
+    document.getElementById('bodyVideo').addEventListener('change', async function () {
+      const file = this.files[0];
+      this.value = '';
+      if (!file) return;
+      if (file.size > 50 * 1024 * 1024) {
+        toast('50MB 이하 영상만 올릴 수 있습니다. 큰 영상은 유튜브에 올린 뒤 유튜브 버튼으로 넣어 주세요.');
+        return;
+      }
+      toast('동영상 올리는 중. 크기에 따라 시간이 걸립니다.');
+      try {
+        const url = await API.uploadImage(file);
+        exec('insertHTML', '<figure><video src="' + esc(url) + '" controls></video><figcaption></figcaption></figure><p><br></p>');
+        toast('동영상을 넣었습니다');
       } catch (err) { fail(err); }
     });
 

@@ -23,3 +23,27 @@
 .rich .s-sm { font-size: 0.88em; }
 .rich .s-lg { font-size: 1.18em; }
 .rich .s-xl { font-size: 1.4em; line-height: 1.5; }
+
+/* 글씨 크기 (pt) */
+.rich .s-10 { font-size: 10pt; line-height: 1.6; }
+.rich .s-11 { font-size: 11pt; line-height: 1.6; }
+.rich .s-12 { font-size: 12pt; line-height: 1.6; }
+.rich .s-14 { font-size: 14pt; line-height: 1.6; }
+.rich .s-16 { font-size: 16pt; line-height: 1.6; }
+.rich .s-18 { font-size: 18pt; line-height: 1.6; }
+.rich .s-20 { font-size: 20pt; line-height: 1.6; }
+.rich .s-24 { font-size: 24pt; line-height: 1.6; }
+.rich .s-28 { font-size: 28pt; line-height: 1.6; }
+
+/* 글씨 색 */
+.rich .c-black { color: #111111; }
+.rich .c-gray { color: #777777; }
+.rich .c-navy { color: #10264a; }
+.rich .c-blue { color: #1e5bd8; }
+.rich .c-red { color: #d0302f; }
+.rich .c-orange { color: #e07a00; }
+.rich .c-green { color: #1f8a4c; }
+
+/* 동영상 */
+.rich video { display: block; width: 100%; max-height: 640px; background: #000; }
+.rich iframe { display: block; width: 100%; aspect-ratio: 16 / 9; height: auto; border: 0; background: #000; }

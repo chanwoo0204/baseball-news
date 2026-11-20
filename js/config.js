@@ -3,7 +3,7 @@
 // ─────────────────────────────────────────────
 window.SITE_CONFIG = {
   // 사이트 이름 (왼쪽 위 로고에 표시)
-  SITE_NAME: 'BASEBALL MAG',
+  SITE_NAME: 'BASEBALL KOREA',
 
   // Supabase 연결 정보 (README.md 의 2단계 참고)
   // 두 값이 비어 있으면 "샘플 모드"로 동작합니다. (글이 내 브라우저에만 저장됨)
