@@ -199,7 +199,9 @@
     document.body.appendChild(sc);
   }
   async function viewHome() {
-    const res = await Promise.all([API.homeArticles(), API.listInstaPosts(6).catch(() => [])]);
+    const res = await Promise.all([API.homeArticles(), API.listInstaPosts(6).catch(() => []),
+      API.popularArticles ? API.popularArticles(8).catch(() => []) : []]);
+    const popular = res[2] || [];
     const list = res[0];
     const bottom = instaSection(res[1]) + storeWide();
     if (!list.length) {
@@ -214,6 +216,9 @@
         '<section class="top-stories' + (side.length ? '' : ' solo') + '">' +
           leadSlider(slides) +
           (side.length ? '<div class="side">' + side.map((a) => story(a, 'side')).join('') + '</div>' : '') +
+          (popular.length ? '<aside class="popular"><h2>가장 많이 읽은 기사</h2><ol>' + popular.map((a, i) =>
+            '<li><a href="#/article/' + a.id + '"><span class="rank">' + (i + 1) + '</span><span>' + esc(a.title) + '</span></a></li>').join('') +
+            '</ol></aside>' : '') +
         '</section>' +
         (rest.length
           ? '<section><h2 class="sec">최신 기사</h2><div class="grid">' +

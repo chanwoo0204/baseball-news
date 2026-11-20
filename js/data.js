@@ -78,7 +78,16 @@
       return arrangeHome(check(res[0]).map(norm), check(res[1]).map(norm));
     },
     async getArticle(id) {
-      return check(await db.from('articles').select('*').eq('id', id).maybeSingle());
+      const a = check(await db.from('articles').select('*').eq('id', id).maybeSingle());
+      if (a) db.rpc('increment_article_views', { aid: id }).then(() => {}, () => {});
+      return a;
+    },
+    // 가장 많이 읽은 기사 (조회수 칸이 아직 없으면 최신 기사로 대신합니다)
+    async popularArticles(limit) {
+      let res = await db.from('articles').select(ART_COLS)
+        .order('views', { ascending: false }).order('created_at', { ascending: false }).limit(limit || 8);
+      if (res.error) res = await db.from('articles').select(ART_COLS).order('created_at', { ascending: false }).limit(limit || 8);
+      return res.error ? [] : res.data.map(norm);
     },
     async listInstaPosts(limit) {
       const res = await db.from('insta_posts').select('id,url,created_at')
@@ -325,6 +334,7 @@
     async signOut() {},
     async listAllArticles() { return SAMPLE_ARTICLES; },
     async homeArticles() { return SAMPLE_ARTICLES.slice(0, 15); },
+    async popularArticles(limit) { return SAMPLE_ARTICLES.slice(0, limit || 8); },
     async listMembers() { return []; },
     async listRecentComments() { return []; },
     async listAllPosts() { return []; },
