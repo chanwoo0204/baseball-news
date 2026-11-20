@@ -154,6 +154,42 @@ h1, h2, h3 { margin: 0; }
 .store-card strong { font-weight: 800; font-size: 26px; line-height: 1.3; letter-spacing: -0.04em; margin: 6px 0 18px; }
 .store-card-go { align-self: flex-start; font-size: 13px; font-weight: 700; padding: 10px 16px; border-radius: 999px; background: var(--white); color: var(--accent); transition: transform 0.3s var(--ease); }
 
+/* 큰 기사 슬라이드 */
+.lead-slider { position: relative; min-width: 0; }
+.slides { display: flex; overflow-x: auto; scroll-snap-type: x mandatory; scrollbar-width: none; overscroll-behavior-x: contain; }
+.slides::-webkit-scrollbar { display: none; }
+.slide { flex: 0 0 100%; min-width: 0; scroll-snap-align: start; scroll-snap-stop: always; }
+.sl-over { position: absolute; left: 0; right: 0; top: 0; aspect-ratio: 16 / 10; pointer-events: none; }
+.sl-btn {
+  position: absolute; top: 50%; width: 44px; height: 44px; margin-top: -22px; pointer-events: auto;
+  display: flex; align-items: center; justify-content: center; border: 0; border-radius: 50%; cursor: pointer;
+  background: rgba(255, 255, 255, 0.92); color: var(--ink); box-shadow: 0 4px 14px rgba(0, 0, 0, 0.15);
+  opacity: 0; transition: opacity 0.3s, transform 0.3s var(--ease);
+}
+.sl-btn svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.sl-prev { left: 14px; }
+.sl-next { right: 14px; }
+.sl-next svg { transform: rotate(180deg); }
+.sl-dots { position: absolute; left: 50%; bottom: 14px; transform: translateX(-50%); display: flex; gap: 6px; padding: 7px 10px; border-radius: 999px; background: rgba(0, 0, 0, 0.3); pointer-events: auto; }
+.sl-dot { width: 8px; height: 8px; padding: 0; border: 0; border-radius: 999px; background: rgba(255, 255, 255, 0.6); cursor: pointer; transition: width 0.35s var(--ease), background-color 0.3s; }
+.sl-dot.on { width: 24px; background: var(--white); }
+.lead-slider .story-lead .ph::after { display: none; }
+.lead-slider:focus-within .sl-btn { opacity: 1; }
+
+/* 인스타그램 */
+.insta-head { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px 20px; margin: 80px 0 22px; }
+.insta-head .sec { margin: 0; }
+.insta-go {
+  display: inline-flex; align-items: center; gap: 10px; padding: 8px 18px 8px 8px; border: 1px solid var(--line); border-radius: 999px;
+  font-size: 14px; transition: border-color 0.25s, transform 0.3s var(--ease);
+}
+.insta-go span { color: var(--sub); font-weight: 600; }
+.insta-go b { font-weight: 700; }
+.insta-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px; align-items: start; }
+.insta-grid .instagram-media { min-width: 0 !important; width: 100% !important; max-width: none !important; margin: 0 !important; }
+.insta-grid iframe { min-width: 0 !important; }
+.insta-sec + .store-wide { margin-top: 56px; }
+
 /* 첫 화면 아래 길게: 매거진 구매 */
 .store-wide {
   display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 20px 32px;
@@ -312,6 +348,10 @@ a.brow:visited .b-title .t { color: var(--mute); }
 @media (hover: hover) {
   .logo:hover { letter-spacing: 0.1em; }
   .logo:hover .logo-mark { transform: rotate(-6deg) scale(1.06); }
+  .lead-slider:hover .sl-btn { opacity: 1; }
+  .sl-btn:hover { transform: scale(1.08); }
+  .insta-go:hover { border-color: var(--ink); transform: translateY(-2px); }
+  .insta-go:hover .insta-logo { transform: rotate(-8deg) scale(1.1); }
   .store-wide:hover { transform: translateY(-4px); box-shadow: 0 16px 40px rgba(16, 38, 74, 0.25); }
   .store-wide:hover .store-wide-go { transform: translateX(6px); }
   .top-right a:hover::after, .chip:hover::after { transform: scaleX(1); }
@@ -359,7 +399,7 @@ a.brow:visited .b-title .t { color: var(--mute); }
   .grid-3 { grid-template-columns: repeat(3, 1fr); }
   /* 왼쪽에 작은 기사 2개, 오른쪽에 큰 기사 */
   .top-stories { grid-template-columns: 1fr 2fr; gap: 32px; }
-  .story-lead { order: 2; }
+  .story-lead, .lead-slider { order: 2; }
   .side { order: 1; grid-template-columns: 1fr; }
   .story-lead .story-title { font-size: 34px; }
   .story-lead .story-sum { font-size: 17px; }
@@ -375,6 +415,8 @@ a.brow:visited .b-title .t { color: var(--mute); }
   .top-nav { gap: 14px; }
   .top-nav [data-nav="news"], .top-nav [data-nav="store"] { display: none; }
   .store-wide { margin-top: 56px; padding: 28px 24px; }
+  .sl-btn { display: none; }
+  .insta-head { margin-top: 56px; }
   .store-wide strong { font-size: 22px; }
   .menu a { font-size: 32px; }
   .page { padding-top: 28px; }

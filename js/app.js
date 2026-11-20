@@ -126,25 +126,94 @@
       '<span class="store-wide-go">매거진 구매하러 가기</span>' +
     '</a>';
   }
+  // 큰 기사 자리: 옆으로 넘기는 슬라이드
+  const ARROW = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg>';
+  function leadSlider(items) {
+    if (items.length === 1) return story(items[0], 'lead');
+    return '<div class="lead-slider" aria-roledescription="carousel" aria-label="주요 기사">' +
+      '<div class="slides">' + items.map((a, i) =>
+        '<div class="slide" role="group" aria-label="' + (i + 1) + ' / ' + items.length + '">' + story(a, 'lead') + '</div>').join('') + '</div>' +
+      '<div class="sl-over">' +
+        '<button type="button" class="sl-btn sl-prev" aria-label="이전 기사">' + ARROW + '</button>' +
+        '<button type="button" class="sl-btn sl-next" aria-label="다음 기사">' + ARROW + '</button>' +
+        '<div class="sl-dots">' + items.map((a, i) =>
+          '<button type="button" class="sl-dot' + (i ? '' : ' on') + '" data-go="' + i + '" aria-label="' + (i + 1) + '번째 기사"></button>').join('') + '</div>' +
+      '</div>' +
+    '</div>';
+  }
+  let sliderTimer = null;
+  function bindSlider() {
+    clearInterval(sliderTimer);
+    const box = app.querySelector('.lead-slider');
+    if (!box) return;
+    const track = box.querySelector('.slides');
+    const dots = Array.from(box.querySelectorAll('.sl-dot'));
+    const count = dots.length;
+    const current = () => Math.round(track.scrollLeft / Math.max(1, track.clientWidth));
+    const go = (i) => { track.scrollTo({ left: ((i + count) % count) * track.clientWidth, behavior: 'smooth' }); };
+    box.querySelector('.sl-prev').addEventListener('click', () => go(current() - 1));
+    box.querySelector('.sl-next').addEventListener('click', () => go(current() + 1));
+    dots.forEach((d) => d.addEventListener('click', () => go(Number(d.dataset.go))));
+    track.addEventListener('scroll', () => {
+      const n = current();
+      dots.forEach((d, i) => d.classList.toggle('on', i === n));
+    }, { passive: true });
+    // 6초마다 자동으로 넘기고, 마우스를 올리거나 만지는 동안은 멈춥니다
+    let paused = false;
+    ['mouseenter', 'focusin', 'touchstart'].forEach((ev) => box.addEventListener(ev, () => { paused = true; }, { passive: true }));
+    ['mouseleave', 'focusout'].forEach((ev) => box.addEventListener(ev, () => { paused = false; }));
+    const still = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (!still) sliderTimer = setInterval(() => { if (!paused && !document.hidden) go(current() + 1); }, 6000);
+  }
+  // 인스타그램 게시물 (인스타그램이 제공하는 퍼가기 방식)
+  function instaSection(posts) {
+    const url = safeUrl(cfg.INSTAGRAM_URL);
+    if (!url) return '';
+    const handle = (url.match(/instagram\.com\/([^/?#]+)/) || [])[1] || 'instagram';
+    const go = '<a class="insta-go" href="' + esc(url) + '" target="_blank" rel="noopener">' +
+      '<img class="insta-logo" src="img/instagram.png" alt=""><span>@' + esc(handle) + '</span><b>인스타그램 바로가기</b></a>';
+    const list = posts.map((p) => API.instaUrl(p.url)).filter(Boolean);
+    return '<section class="insta-sec">' +
+      '<div class="insta-head"><h2 class="sec">인스타그램</h2>' + go + '</div>' +
+      (list.length
+        ? '<div class="insta-grid">' + list.map((u) =>
+            '<blockquote class="instagram-media" data-instgrm-permalink="' + esc(u) + '" data-instgrm-version="14">' +
+              '<a href="' + esc(u) + '" target="_blank" rel="noopener">인스타그램에서 보기</a></blockquote>').join('') + '</div>'
+        : '') +
+    '</section>';
+  }
+  function loadInstaEmbeds() {
+    if (!app.querySelector('.instagram-media')) return;
+    if (window.instgrm && window.instgrm.Embeds) { window.instgrm.Embeds.process(); return; }
+    if (document.getElementById('instaEmbedJs')) return;
+    const sc = document.createElement('script');
+    sc.id = 'instaEmbedJs';
+    sc.async = true;
+    sc.src = 'https://www.instagram.com/embed.js';
+    document.body.appendChild(sc);
+  }
   async function viewHome() {
-    const list = await API.homeArticles();
+    const res = await Promise.all([API.homeArticles(), API.listInstaPosts(6).catch(() => [])]);
+    const list = res[0];
+    const bottom = instaSection(res[1]) + storeWide();
     if (!list.length) {
-      return chips('') + '<div class="wide"><p class="notice">아직 올라온 기사가 없습니다.</p>' + storeWide() + '</div>';
+      return chips('') + '<div class="wide"><p class="notice">아직 올라온 기사가 없습니다.</p>' + bottom + '</div>';
     }
-    const lead = list[0];
+    // 큰 기사 자리: 첫 장은 메인 배치의 큰 기사, 이어서 옆 기사 다음 순서의 최신 기사 최대 4개
     const side = list.slice(1, 3);
-    const rest = list.slice(3);
+    const slides = [list[0]].concat(list.slice(3, 7));
+    const rest = list.slice(7);
     return chips('') +
       '<div class="wide">' +
         '<section class="top-stories' + (side.length ? '' : ' solo') + '">' +
-          story(lead, 'lead') +
+          leadSlider(slides) +
           (side.length ? '<div class="side">' + side.map((a) => story(a, 'side')).join('') + '</div>' : '') +
         '</section>' +
         (rest.length
           ? '<section><h2 class="sec">최신 기사</h2><div class="grid">' +
               rest.map((a) => story(a, 'grid')).join('') + '</div></section>'
           : '') +
-        storeWide() +
+        bottom +
       '</div>';
   }
 
@@ -729,6 +798,8 @@
     bindBoard();
     bindLoginForm();
     bindArticle();
+    bindSlider();
+    loadInstaEmbeds();
     bindReturnLinks(app);
     app.querySelectorAll('.comments').forEach(mountComments);
   }

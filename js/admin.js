@@ -3,6 +3,7 @@
 //   #/articles   기사 목록 (?q=검색어)
 //   #/write      새 기사 쓰기   (#/write/3 은 3번 기사 수정)
 //   #/main       메인 배치
+//   #/insta      첫 화면에 보여 줄 인스타그램 게시물
 //   #/reports    신고 관리 (?status=done 은 처리한 신고)
 //   #/board      게시판 관리 (?q=검색어)
 //   #/comments   댓글 관리
@@ -484,7 +485,8 @@
     };
     return head('메인 배치') +
       '<p class="hint">첫 화면 맨 위 세 자리에 놓을 기사를 고르세요. 고르는 즉시 사이트에 반영됩니다. ' +
-        '자동으로 두면 최신 기사가 들어갑니다.</p>' +
+        '자동으로 두면 최신 기사가 들어갑니다. 큰 기사 자리는 옆으로 넘기는 슬라이드라서, 여기서 고른 기사가 첫 장에 나오고 ' +
+        '이어서 최신 기사가 최대 4장 더 나옵니다.</p>' +
       '<div class="card slots"><div class="slot-side">' + box(2) + box(3) + '</div>' + box(1) + '</div>';
   }
 
@@ -567,6 +569,26 @@
       table(['제목', '말머리', '글쓴이', '댓글', '조회', '작성', ''], rows, q ? '찾은 글이 없습니다.' : '아직 글이 없습니다.');
   }
 
+  // ── 인스타그램 ──────────────────────────────
+  async function viewInsta() {
+    const list = await API.listInstaPosts(30);
+    const rows = list.map((p, i) =>
+      '<tr>' +
+        '<td class="t-title"><a href="' + esc(p.url) + '" target="_blank" rel="noopener">' + esc(p.url) + '</a>' +
+          (i < 6 ? ' <span class="pill">첫 화면 표시</span>' : '') + '</td>' +
+        '<td class="num">' + fmt(p.created_at) + '</td>' +
+        '<td class="acts"><button type="button" class="danger" data-idel="' + p.id + '">빼기</button></td>' +
+      '</tr>').join('');
+    return head('인스타그램') +
+      '<p class="hint">첫 화면 아래 인스타그램 칸에 보여 줄 게시물을 고르세요. 인스타그램 게시물에서 공유 → 링크 복사를 누른 뒤 ' +
+        '아래에 붙여넣으면 됩니다. 가장 최근에 넣은 6개가 첫 화면에 나옵니다.</p>' +
+      '<form class="search" id="instaForm">' +
+        '<input name="url" placeholder="https://www.instagram.com/p/..." aria-label="인스타그램 게시물 주소" required>' +
+        '<button class="btn" type="submit">게시물 넣기</button>' +
+      '</form>' +
+      table(['게시물', '넣은 때', ''], rows, '아직 넣은 게시물이 없습니다. 게시물이 없으면 첫 화면에는 인스타그램 바로가기 버튼만 나옵니다.');
+  }
+
   // ── 댓글 관리 ───────────────────────────────
   async function viewComments() {
     const list = await API.listRecentComments(150);
@@ -635,6 +657,22 @@
     main.querySelectorAll('[data-cdel]').forEach((btn) => {
       twoStep(btn, '정말 삭제', async () => { await API.deleteComment(Number(btn.dataset.cdel)); toast('댓글을 삭제했습니다'); render(); });
     });
+    const instaForm = document.getElementById('instaForm');
+    if (instaForm) {
+      instaForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const btn = instaForm.querySelector('button');
+        btn.disabled = true;
+        try {
+          await API.addInstaPost(instaForm.url.value);
+          toast('게시물을 넣었습니다');
+          render();
+        } catch (err) { fail(err); btn.disabled = false; }
+      });
+    }
+    main.querySelectorAll('[data-idel]').forEach((btn) => {
+      twoStep(btn, '정말 빼기', async () => { await API.deleteInstaPost(Number(btn.dataset.idel)); toast('게시물을 뺐습니다'); render(); });
+    });
     main.querySelectorAll('[data-pdel]').forEach((btn) => {
       twoStep(btn, '정말 삭제', async () => { await API.deletePost(Number(btn.dataset.pdel)); toast('게시글을 삭제했습니다'); render(); });
     });
@@ -690,7 +728,7 @@
   }
 
   // ── 주소 → 화면 ─────────────────────────────
-  const VIEWS = { articles: viewArticles, write: viewWrite, main: viewMain, reports: viewReports, board: viewBoard, comments: viewComments, members: viewMembers };
+  const VIEWS = { articles: viewArticles, write: viewWrite, main: viewMain, insta: viewInsta, reports: viewReports, board: viewBoard, comments: viewComments, members: viewMembers };
   let turn = 0;
   async function render() {
     const mine = ++turn;

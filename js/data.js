@@ -36,6 +36,12 @@
   }
 
   // Supabase 가 돌려준 줄에서 댓글 수를 꺼내 정리
+  // 인스타그램 게시물 주소를 정리합니다 (아니면 빈 값)
+  function instaUrl(u) {
+    const m = String(u || '').trim().match(/^https?:\/\/(?:www\.)?instagram\.com\/(?:[A-Za-z0-9_.]+\/)?(p|reel)\/([A-Za-z0-9_-]+)/);
+    return m ? 'https://www.instagram.com/' + m[1] + '/' + m[2] + '/' : '';
+  }
+
   function norm(row) {
     const c = row.comments;
     const count = Array.isArray(c) && c[0] ? c[0].count : 0;
@@ -73,6 +79,11 @@
     },
     async getArticle(id) {
       return check(await db.from('articles').select('*').eq('id', id).maybeSingle());
+    },
+    async listInstaPosts(limit) {
+      const res = await db.from('insta_posts').select('id,url,created_at')
+        .order('created_at', { ascending: false }).limit(limit || 6);
+      return res.error ? [] : res.data;
     },
 
     // 게시판: opt = { category, page, q, size }
@@ -258,6 +269,16 @@
     async resolveReports(ids) {
       check(await db.from('reports').update({ status: 'done' }).in('id', ids));
     },
+    async addInstaPost(url) {
+      const clean = instaUrl(url);
+      if (!clean) throw new Error('인스타그램 게시물 주소가 아닙니다.');
+      const res = await db.from('insta_posts').insert({ url: clean });
+      if (res.error && res.error.code === '23505') throw new Error('이미 등록된 게시물입니다.');
+      check(res);
+    },
+    async deleteInstaPost(id) {
+      check(await db.from('insta_posts').delete().eq('id', id));
+    },
     async listRecentComments(limit) {
       const q = db.from('comments')
         .select('id,body,nickname,user_id,created_at,post_id,article_id,posts(title),articles(title)')
@@ -307,11 +328,12 @@
     async listMembers() { return []; },
     async listRecentComments() { return []; },
     async listAllPosts() { return []; },
+    async listInstaPosts() { return []; },
     async listReports() { return []; },
     async countOpenReports() { return 0; },
     createPost: noDb, deletePost: noDb, createComment: noDb, deleteComment: noDb,
-    signIn: noDb, signUp: noDb, signInNaver: noDb, setNickname: noDb, setMainSlot: noDb, setMember: noDb, createReport: noDb, resolveReports: noDb, saveArticle: noDb, deleteArticle: noDb, uploadImage: noDb,
+    signIn: noDb, signUp: noDb, signInNaver: noDb, setNickname: noDb, setMainSlot: noDb, setMember: noDb, createReport: noDb, resolveReports: noDb, addInstaPost: noDb, deleteInstaPost: noDb, saveArticle: noDb, deleteArticle: noDb, uploadImage: noDb,
   };
 
-  window.API = Object.assign({ live: live, NOTICE: NOTICE, REPORT_REASONS: REPORT_REASONS }, live ? remote : local);
+  window.API = Object.assign({ live: live, NOTICE: NOTICE, REPORT_REASONS: REPORT_REASONS, instaUrl: instaUrl }, live ? remote : local);
 })();
