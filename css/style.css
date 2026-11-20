@@ -93,6 +93,7 @@ h1, h2, h3 { margin: 0; }
 /* ── 카테고리 줄 ── */
 .chips { display: flex; align-items: center; gap: 24px; max-width: 1200px; margin: 0 auto; padding: 14px 24px; overflow-x: auto; scrollbar-width: none; }
 .chips::-webkit-scrollbar { display: none; }
+.chips-gap { height: 22px; }
 .chip { flex: none; font-size: 15px; font-weight: 600; color: var(--mute); transition: color 0.2s; }
 .chip.on { color: var(--ink); }
 

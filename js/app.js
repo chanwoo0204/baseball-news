@@ -102,21 +102,22 @@
     const img = safeUrl(a.image_url);
     return '<span class="ph">' +
       (img ? '<img src="' + esc(img) + '" alt="" loading="' + (eager ? 'eager' : 'lazy') + '">'
-           : '<span class="ph-word">' + esc(a.category) + '</span>') +
+           : '') +
       '</span>';
   }
   function story(a, kind) {
     return '<a class="story story-' + kind + '" href="#/article/' + a.id + '">' +
       photo(a, kind === 'lead') +
       '<span class="story-text">' +
-        '<span class="cat">' + esc(a.category) + '</span>' +
         '<strong class="story-title"><span>' + esc(a.title) + '</span></strong>' +
         (kind === 'lead' && a.summary ? '<span class="story-sum">' + esc(a.summary) + '</span>' : '') +
         '<span class="meta">' + (a.author_name ? '<span>' + esc(a.author_name) + '</span>' : '') + '<span>' + ymd(a.created_at) + '</span>' +
           (a.comment_count ? '<span>댓글 ' + a.comment_count + '</span>' : '') + '</span>' +
       '</span></a>';
   }
-  function chips(active) {
+  // 카테고리 칸(전체·이적·인터뷰…)은 화면에 보이지 않게 했습니다
+  function chips() { return '<div class="chips-gap"></div>'; }
+  function chipsOld(active) {
     return '<nav class="chips" aria-label="기사 카테고리">' +
       '<a class="chip' + (active ? '' : ' on') + '" href="#/">전체</a>' +
       CATEGORIES.map((c) =>
@@ -268,7 +269,6 @@
       ? '<div class="body rich">' + Rich.sanitize(a.body) + '</div>'
       : '<div class="body plain">' + esc(a.body) + '</div>';
     return '<article class="page article" style="--fs:' + textSize + 'px">' +
-      '<a class="cat" href="#/c/' + encodeURIComponent(a.category) + '">' + esc(a.category) + '</a>' +
       '<h1>' + esc(a.title) + '</h1>' +
       (a.summary ? '<p class="dek">' + esc(a.summary) + '</p>' : '') +
       '<div class="byline">' +
@@ -769,8 +769,7 @@
       location.hash = '#/search/' + encodeURIComponent(word);
     });
 
-    document.getElementById('drawerCats').innerHTML = CATEGORIES.map((c) =>
-      '<a href="#/c/' + encodeURIComponent(c) + '">' + esc(c) + '</a>').join('');
+    document.getElementById('drawerCats').remove();
 
     const insta = document.getElementById('instaLink');
     const instaUrl = safeUrl(cfg.INSTAGRAM_URL);
