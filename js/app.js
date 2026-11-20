@@ -8,6 +8,8 @@
 //   #/board/12      게시글 + 댓글
 //   #/write         글쓰기 (로그인 필요)
 //   #/store         매거진 구매 안내
+//   #/notice        공지사항 (#/notice/3 은 3번 공지)
+//   #/schedule      일정 달력 (?m=2026-11&d=20)
 //   #/search/검색어 전체 검색 결과
 //   #/login         로그인 · 회원가입
 //   #/admin         관리자 페이지(admin.html)로 이동
@@ -199,9 +201,15 @@
     document.body.appendChild(sc);
   }
   async function viewHome() {
-    const res = await Promise.all([API.homeArticles(), API.listInstaPosts(6).catch(() => [])]);
+    const now = new Date();
+    const res = await Promise.all([
+      API.homeArticles(),
+      API.listInstaPosts(6).catch(() => []),
+      API.listNotices(5).catch(() => []),
+      API.listEvents(dkey(monthStart(now)), dkey(new Date(now.getFullYear(), now.getMonth() + 2, 0))).catch(() => []),
+    ]);
     const list = res[0];
-    const bottom = instaSection(res[1]) + storeWide();
+    const bottom = homeInfo(res[2], res[3]) + instaSection(res[1]) + storeWide();
     if (!list.length) {
       return chips('') + '<div class="wide"><p class="notice">아직 올라온 기사가 없습니다.</p>' + bottom + '</div>';
     }
@@ -221,6 +229,101 @@
           : '') +
         bottom +
       '</div>';
+  }
+
+  // ── 공지사항 · 일정 ─────────────────────────
+  const KIND_CLASS = { '경기': 'k-game', '행사': 'k-event', '매거진': 'k-mag', '기타': 'k-etc' };
+  function dkey(d) { return d.getFullYear() + '-' + two(d.getMonth() + 1) + '-' + two(d.getDate()); }
+  function monthStart(d) { return new Date(d.getFullYear(), d.getMonth(), 1); }
+  function monthKey(d) { return d.getFullYear() + '-' + two(d.getMonth() + 1); }
+  function mdLabel(day) { const p = day.split('-'); return Number(p[1]) + '.' + Number(p[2]); }
+  const WEEK = ['일', '월', '화', '수', '목', '금', '토'];
+  // 달력 한 달치 (일요일 시작). 일정이 있는 날은 점이 찍히고, 누르면 일정 화면으로 갑니다
+  function monthGrid(first, events, selected) {
+    const byDay = {};
+    events.forEach((e) => { (byDay[e.day] = byDay[e.day] || []).push(e); });
+    const today = dkey(new Date());
+    let cells = WEEK.map((w, i) => '<span class="cal-w' + (i === 0 ? ' sun' : i === 6 ? ' sat' : '') + '">' + w + '</span>').join('');
+    for (let i = 0; i < first.getDay(); i++) cells += '<span class="cal-d empty"></span>';
+    const last = new Date(first.getFullYear(), first.getMonth() + 1, 0).getDate();
+    for (let d = 1; d <= last; d++) {
+      const key = monthKey(first) + '-' + two(d);
+      const list = byDay[key] || [];
+      const cls = 'cal-d' + (key === today ? ' today' : '') + (key === selected ? ' sel' : '') + (list.length ? ' has' : '');
+      const dots = list.slice(0, 3).map((e) => '<i class="' + (KIND_CLASS[e.kind] || 'k-etc') + '"></i>').join('');
+      cells += list.length
+        ? '<a class="' + cls + '" href="#/schedule?m=' + monthKey(first) + '&d=' + two(d) + '" title="' + esc(list.map((e) => e.title).join(', ')) + '"><b>' + d + '</b><span class="dots">' + dots + '</span></a>'
+        : '<span class="' + cls + '"><b>' + d + '</b></span>';
+    }
+    return '<div class="cal">' + cells + '</div>';
+  }
+  function eventRow(e) {
+    return '<li class="ev"><span class="ev-day">' + mdLabel(e.day) + '</span>' +
+      '<span class="ev-kind ' + (KIND_CLASS[e.kind] || 'k-etc') + '">' + esc(e.kind) + '</span>' +
+      '<span class="ev-title">' + esc(e.title) + (e.note ? '<small>' + esc(e.note) + '</small>' : '') + '</span></li>';
+  }
+  function homeInfo(notices, events) {
+    const now = new Date();
+    const first = monthStart(now);
+    const thisMonth = events.filter((e) => e.day.slice(0, 7) === monthKey(first));
+    const upcoming = events.filter((e) => e.day >= dkey(now)).slice(0, 4);
+    const rows = notices.slice(0, 5).map((n) =>
+      '<a class="mini" href="#/notice/' + n.id + '"><span class="mini-title">' + (n.pinned ? '<em class="pin">필독</em>' : '') +
+        '<span>' + esc(n.title) + '</span></span><span class="mini-date">' + ymd(n.created_at) + '</span></a>').join('');
+    return '<section class="home-info">' +
+      '<div class="info-box">' +
+        '<div class="box-head"><h2 class="sec">공지사항</h2><a class="more" href="#/notice">전체 보기</a></div>' +
+        '<div class="minis">' + (rows || '<p class="empty-note">아직 공지사항이 없습니다.</p>') + '</div>' +
+      '</div>' +
+      '<div class="info-box">' +
+        '<div class="box-head"><h2 class="sec">' + (now.getMonth() + 1) + '월 주요 일정</h2><a class="more" href="#/schedule">달력 보기</a></div>' +
+        monthGrid(first, thisMonth, '') +
+        (upcoming.length ? '<ul class="ev-list">' + upcoming.map(eventRow).join('') + '</ul>' : '<p class="empty-note">다가오는 일정이 없습니다.</p>') +
+      '</div>' +
+    '</section>';
+  }
+  async function viewNotices() {
+    const list = await API.listNotices(100);
+    const rows = list.map((n) =>
+      '<a class="row" href="#/notice/' + n.id + '"><span class="row-title">' + (n.pinned ? '<em class="pin">필독</em> ' : '') + esc(n.title) + '</span>' +
+        '<span class="row-nick"></span><span class="row-date">' + ymd(n.created_at) + '</span></a>').join('');
+    return '<div class="page"><h1>공지사항</h1><div class="rows">' + (rows || '<p class="notice">아직 공지사항이 없습니다.</p>') + '</div></div>';
+  }
+  async function viewNotice(id) {
+    const n = await API.getNotice(id);
+    if (!n) return '<div class="page"><p class="notice">공지사항을 찾을 수 없습니다.</p></div>';
+    return '<article class="page post">' +
+      '<a class="back" href="#/notice">공지사항 목록</a>' +
+      (n.pinned ? '<span class="cat">필독</span>' : '') +
+      '<h1>' + esc(n.title) + '</h1>' +
+      '<p class="meta"><span>' + ymd(n.created_at) + '</span></p>' +
+      '<div class="body plain">' + esc(n.body) + '</div>' +
+    '</article>';
+  }
+  async function viewSchedule(match, query) {
+    const now = new Date();
+    const m = /^(\d{4})-(\d{2})$/.exec(query.m || '');
+    const first = m ? new Date(Number(m[1]), Number(m[2]) - 1, 1) : monthStart(now);
+    const last = new Date(first.getFullYear(), first.getMonth() + 1, 0);
+    const events = await API.listEvents(dkey(first), dkey(last));
+    const sel = query.d ? monthKey(first) + '-' + two(Number(query.d)) : '';
+    const prev = monthKey(new Date(first.getFullYear(), first.getMonth() - 1, 1));
+    const next = monthKey(new Date(first.getFullYear(), first.getMonth() + 1, 1));
+    const groups = {};
+    events.forEach((e) => { (groups[e.day] = groups[e.day] || []).push(e); });
+    const list = Object.keys(groups).map((day) =>
+      '<div class="ev-group' + (day === sel ? ' sel' : '') + '" id="day-' + day + '">' +
+        '<h3>' + mdLabel(day) + ' (' + WEEK[new Date(day + 'T00:00').getDay()] + ')</h3>' +
+        '<ul class="ev-list">' + groups[day].map(eventRow).join('') + '</ul></div>').join('');
+    return '<div class="page schedule">' +
+      '<div class="page-head"><h1>' + first.getFullYear() + '년 ' + (first.getMonth() + 1) + '월 일정</h1>' +
+        '<div class="month-nav"><a class="tool-btn" href="#/schedule?m=' + prev + '">이전 달</a>' +
+        '<a class="tool-btn" href="#/schedule">이번 달</a>' +
+        '<a class="tool-btn" href="#/schedule?m=' + next + '">다음 달</a></div></div>' +
+      '<div class="cal-legend"><span><i class="k-game"></i>경기</span><span><i class="k-event"></i>행사</span><span><i class="k-mag"></i>매거진</span><span><i class="k-etc"></i>기타</span></div>' +
+      monthGrid(first, events, sel) +
+      '<div class="ev-groups">' + (list || '<p class="notice">이 달에는 등록된 일정이 없습니다.</p>') + '</div>' +
+    '</div>';
   }
 
   // ── 카테고리별 기사 ─────────────────────────
@@ -771,6 +874,9 @@
     { re: /^\/board\/(\d+)$/, nav: 'board', view: (m) => viewPost(Number(m[1])) },
     { re: /^\/write$/, nav: 'board', view: viewWrite },
     { re: /^\/store$/, nav: 'store', view: viewStore },
+    { re: /^\/notice$/, nav: 'notice', view: viewNotices },
+    { re: /^\/notice\/(\d+)$/, nav: 'notice', view: (m) => viewNotice(Number(m[1])) },
+    { re: /^\/schedule$/, nav: 'schedule', view: viewSchedule },
     { re: /^\/search\/(.*)$/, nav: '', view: (m) => viewSearch(decodeURIComponent(m[1])) },
     { re: /^\/login$/, nav: 'login', view: viewLogin },
     { re: /^\/admin(\/\d+)?$/, nav: '', view: goAdmin },
@@ -806,6 +912,8 @@
     bindArticle();
     bindSlider();
     loadInstaEmbeds();
+    const selDay = app.querySelector('.ev-group.sel');
+    if (selDay) selDay.scrollIntoView({ block: 'center' });
     bindReturnLinks(app);
     app.querySelectorAll('.comments').forEach(mountComments);
   }

@@ -4,6 +4,8 @@
 //   #/write      새 기사 쓰기   (#/write/3 은 3번 기사 수정)
 //   #/main       메인 배치
 //   #/insta      첫 화면에 보여 줄 인스타그램 게시물
+//   #/notices    공지사항 (#/notices/3 은 3번 수정)
+//   #/events     일정
 //   #/reports    신고 관리 (?status=done 은 처리한 신고)
 //   #/board      게시판 관리 (?q=검색어)
 //   #/comments   댓글 관리
@@ -569,6 +571,52 @@
       table(['제목', '말머리', '글쓴이', '댓글', '조회', '작성', ''], rows, q ? '찾은 글이 없습니다.' : '아직 글이 없습니다.');
   }
 
+  // ── 공지사항 ────────────────────────────────
+  async function viewNoticesAdmin(arg) {
+    const id = Number(arg) || 0;
+    const list = await API.listNotices(100);
+    const cur = id ? await API.getNotice(id) : null;
+    const n = cur || { title: '', body: '', pinned: false };
+    const rows = list.map((x) =>
+      '<tr><td class="t-title"><a href="#/notices/' + x.id + '">' + esc(x.title) + '</a>' + (x.pinned ? ' <span class="pill">필독</span>' : '') + '</td>' +
+        '<td class="num">' + fmt(x.created_at) + '</td>' +
+        '<td class="acts"><a href="index.html#/notice/' + x.id + '" target="_blank" rel="noopener">보기</a><a href="#/notices/' + x.id + '">수정</a>' +
+        '<button type="button" class="danger" data-ndel="' + x.id + '">삭제</button></td></tr>').join('');
+    return head(cur ? '공지사항 수정' : '공지사항', cur ? '<a class="btn ghost" href="#/notices">새 공지 쓰기</a>' : '') +
+      '<form class="card box notice-form" id="noticeForm" data-id="' + (cur ? cur.id : '') + '">' +
+        '<label>제목<input name="title" maxlength="100" required value="' + esc(n.title) + '"></label>' +
+        '<label>내용<textarea name="body" rows="8" maxlength="10000">' + esc(n.body) + '</textarea></label>' +
+        '<label class="check"><input type="checkbox" name="pinned"' + (n.pinned ? ' checked' : '') + '> 필독으로 맨 위에 고정</label>' +
+        '<button class="btn" type="submit">' + (cur ? '수정한 내용 저장' : '공지 올리기') + '</button>' +
+      '</form>' +
+      '<h2 class="sub-head">올린 공지</h2>' +
+      table(['제목', '올린 때', ''], rows, '아직 공지사항이 없습니다.');
+  }
+
+  // ── 일정 ────────────────────────────────────
+  async function viewEvents() {
+    const today = new Date();
+    const from = new Date(today.getFullYear(), today.getMonth() - 1, 1);
+    const to = new Date(today.getFullYear() + 1, today.getMonth(), 0);
+    const iso = (d) => d.getFullYear() + '-' + two(d.getMonth() + 1) + '-' + two(d.getDate());
+    const list = await API.listEvents(iso(from), iso(to));
+    const rows = list.map((e) =>
+      '<tr' + (e.day < iso(today) ? ' class="is-banned"' : '') + '><td class="num">' + e.day.slice(2).replace(/-/g, '.') + '</td>' +
+        '<td><span class="pill">' + esc(e.kind) + '</span></td>' +
+        '<td class="t-title">' + esc(e.title) + (e.note ? '<div class="where">' + esc(e.note) + '</div>' : '') + '</td>' +
+        '<td class="acts"><button type="button" class="danger" data-edel="' + e.id + '">삭제</button></td></tr>').join('');
+    return head('일정') +
+      '<p class="hint">첫 화면의 이번 달 달력과 일정 화면에 나옵니다. 지난달부터 앞으로 1년까지의 일정을 보여 줍니다.</p>' +
+      '<form class="card box event-form" id="eventForm">' +
+        '<label>날짜<input type="date" name="day" required value="' + iso(today) + '"></label>' +
+        '<label>종류<select name="kind"><option>경기</option><option>행사</option><option>매거진</option><option selected>기타</option></select></label>' +
+        '<label class="wide-field">일정 이름<input name="title" maxlength="100" required placeholder="예: 한국시리즈 1차전"></label>' +
+        '<label class="wide-field">메모 (선택)<input name="note" maxlength="500" placeholder="예: 18:30 잠실"></label>' +
+        '<button class="btn" type="submit">일정 넣기</button>' +
+      '</form>' +
+      table(['날짜', '종류', '일정', ''], rows, '등록된 일정이 없습니다.');
+  }
+
   // ── 인스타그램 ──────────────────────────────
   async function viewInsta() {
     const list = await API.listInstaPosts(30);
@@ -657,6 +705,38 @@
     main.querySelectorAll('[data-cdel]').forEach((btn) => {
       twoStep(btn, '정말 삭제', async () => { await API.deleteComment(Number(btn.dataset.cdel)); toast('댓글을 삭제했습니다'); render(); });
     });
+    const noticeForm = document.getElementById('noticeForm');
+    if (noticeForm) {
+      noticeForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const btn = noticeForm.querySelector('button');
+        btn.disabled = true;
+        try {
+          await API.saveNotice({ id: Number(noticeForm.dataset.id) || null, title: noticeForm.title.value.trim(), body: noticeForm.body.value, pinned: noticeForm.pinned.checked });
+          toast('공지사항을 저장했습니다');
+          if (location.hash === '#/notices') render(); else location.hash = '#/notices';
+        } catch (err) { fail(err); btn.disabled = false; }
+      });
+    }
+    main.querySelectorAll('[data-ndel]').forEach((btn) => {
+      twoStep(btn, '정말 삭제', async () => { await API.deleteNotice(Number(btn.dataset.ndel)); toast('공지사항을 삭제했습니다'); location.hash = '#/notices'; render(); });
+    });
+    const eventForm = document.getElementById('eventForm');
+    if (eventForm) {
+      eventForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const btn = eventForm.querySelector('button');
+        btn.disabled = true;
+        try {
+          await API.addEvent({ day: eventForm.day.value, kind: eventForm.kind.value, title: eventForm.title.value.trim(), note: eventForm.note.value.trim() });
+          toast('일정을 넣었습니다');
+          render();
+        } catch (err) { fail(err); btn.disabled = false; }
+      });
+    }
+    main.querySelectorAll('[data-edel]').forEach((btn) => {
+      twoStep(btn, '정말 삭제', async () => { await API.deleteEvent(Number(btn.dataset.edel)); toast('일정을 삭제했습니다'); render(); });
+    });
     const instaForm = document.getElementById('instaForm');
     if (instaForm) {
       instaForm.addEventListener('submit', async (e) => {
@@ -728,7 +808,7 @@
   }
 
   // ── 주소 → 화면 ─────────────────────────────
-  const VIEWS = { articles: viewArticles, write: viewWrite, main: viewMain, insta: viewInsta, reports: viewReports, board: viewBoard, comments: viewComments, members: viewMembers };
+  const VIEWS = { articles: viewArticles, write: viewWrite, main: viewMain, notices: viewNoticesAdmin, events: viewEvents, insta: viewInsta, reports: viewReports, board: viewBoard, comments: viewComments, members: viewMembers };
   let turn = 0;
   async function render() {
     const mine = ++turn;

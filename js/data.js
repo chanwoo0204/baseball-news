@@ -80,6 +80,20 @@
     async getArticle(id) {
       return check(await db.from('articles').select('*').eq('id', id).maybeSingle());
     },
+    // 공지사항 · 일정
+    async listNotices(limit) {
+      const res = await db.from('notices').select('id,title,pinned,created_at')
+        .order('pinned', { ascending: false }).order('created_at', { ascending: false }).limit(limit || 50);
+      return res.error ? [] : res.data;
+    },
+    async getNotice(id) {
+      return check(await db.from('notices').select('*').eq('id', id).maybeSingle());
+    },
+    async listEvents(from, to) {
+      const res = await db.from('events').select('id,day,title,kind,note')
+        .gte('day', from).lte('day', to).order('day', { ascending: true }).limit(300);
+      return res.error ? [] : res.data;
+    },
     async listInstaPosts(limit) {
       const res = await db.from('insta_posts').select('id,url,created_at')
         .order('created_at', { ascending: false }).limit(limit || 6);
@@ -269,6 +283,20 @@
     async resolveReports(ids) {
       check(await db.from('reports').update({ status: 'done' }).in('id', ids));
     },
+    async saveNotice(n) {
+      const row = { title: n.title, body: n.body || '', pinned: !!n.pinned };
+      if (n.id) check(await db.from('notices').update(row).eq('id', n.id));
+      else check(await db.from('notices').insert(row));
+    },
+    async deleteNotice(id) {
+      check(await db.from('notices').delete().eq('id', id));
+    },
+    async addEvent(e) {
+      check(await db.from('events').insert({ day: e.day, title: e.title, kind: e.kind, note: e.note || null }));
+    },
+    async deleteEvent(id) {
+      check(await db.from('events').delete().eq('id', id));
+    },
     async addInstaPost(url) {
       const clean = instaUrl(url);
       if (!clean) throw new Error('인스타그램 게시물 주소가 아닙니다.');
@@ -329,10 +357,13 @@
     async listRecentComments() { return []; },
     async listAllPosts() { return []; },
     async listInstaPosts() { return []; },
+    async listNotices() { return []; },
+    async getNotice() { return null; },
+    async listEvents() { return []; },
     async listReports() { return []; },
     async countOpenReports() { return 0; },
     createPost: noDb, deletePost: noDb, createComment: noDb, deleteComment: noDb,
-    signIn: noDb, signUp: noDb, signInNaver: noDb, setNickname: noDb, setMainSlot: noDb, setMember: noDb, createReport: noDb, resolveReports: noDb, addInstaPost: noDb, deleteInstaPost: noDb, saveArticle: noDb, deleteArticle: noDb, uploadImage: noDb,
+    signIn: noDb, signUp: noDb, signInNaver: noDb, setNickname: noDb, setMainSlot: noDb, setMember: noDb, createReport: noDb, resolveReports: noDb, addInstaPost: noDb, deleteInstaPost: noDb, saveNotice: noDb, deleteNotice: noDb, addEvent: noDb, deleteEvent: noDb, saveArticle: noDb, deleteArticle: noDb, uploadImage: noDb,
   };
 
   window.API = Object.assign({ live: live, NOTICE: NOTICE, REPORT_REASONS: REPORT_REASONS, instaUrl: instaUrl }, live ? remote : local);

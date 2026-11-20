@@ -158,3 +158,14 @@ body.ready .adm-nav { visibility: visible; }
   .slots { grid-template-columns: 1fr; }
 }
 @media (prefers-reduced-motion: reduce) { *, *::before, *::after { transition-duration: 0.01ms !important; } }
+
+/* 공지사항 · 일정 입력 */
+.notice-form, .event-form { margin-bottom: 22px; }
+.notice-form textarea { width: 100%; font: inherit; font-size: 14px; padding: 10px 12px; border: 1px solid var(--line); border-radius: 8px; resize: vertical; line-height: 1.7; }
+.box .check { display: flex; flex-direction: row; align-items: center; gap: 8px; font-size: 14px; font-weight: 500; color: var(--ink); }
+.box .check input { width: auto; }
+.notice-form .btn, .event-form .btn { justify-self: start; }
+.event-form { grid-template-columns: 180px 140px 1fr; align-items: end; }
+.event-form .wide-field { grid-column: span 3; }
+.sub-head { font-size: 16px; font-weight: 800; margin: 8px 0 12px; }
+@media (max-width: 760px) { .event-form { grid-template-columns: 1fr 1fr; } .event-form .wide-field { grid-column: span 2; } }
