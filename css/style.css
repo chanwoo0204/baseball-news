@@ -436,7 +436,7 @@ a.brow:visited .b-title .t { color: var(--mute); }
   .story-side .story-sum { display: none; }
   .story-side .ph { aspect-ratio: 16 / 9; }
   .popular { order: 3; display: flex; flex-direction: column; height: 0; min-height: 100%; overflow: hidden; }
-  .popular ol { flex: 1; display: flex; flex-direction: column; justify-content: space-between; }
+  .popular ol { flex: 1; }
   
   .lead-slider, .lead-slider .slides, .lead-slider .slide, .top-stories .story-lead { height: 100%; }
   .top-stories .story-lead .ph { aspect-ratio: auto; height: 100%; min-height: 420px; }
