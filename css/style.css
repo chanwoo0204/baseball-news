@@ -109,6 +109,7 @@ h1, h2, h3 { margin: 0; }
 .ph-word { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 18px; letter-spacing: 0.2em; padding-left: 0.2em; color: #9aa4b5; }
 .ph img, .ph-word { transition: transform 0.9s var(--ease); }
 .ph::after {
+  display: none;
   content: '기사 읽기'; position: absolute; left: 12px; bottom: 12px;
   background: var(--white); color: var(--ink); padding: 7px 12px; border-radius: 999px;
   font-size: 12px; font-weight: 700; line-height: 1;
@@ -362,9 +363,7 @@ a.brow:visited .b-title .t { color: var(--mute); }
   .drawer-cats a:hover { border-color: var(--ink); color: var(--ink); }
   .insta:hover .insta-logo { transform: rotate(-8deg) scale(1.1); }
 
-  .story:hover .ph img, .story:hover .ph-word { transform: scale(1.06); }
-  .story:hover .ph::after { opacity: 1; transform: none; }
-  .story:hover .story-title span, .mini:hover .mini-title span,
+  .mini:hover .mini-title span,
   a.brow:hover .b-title .t, a.row:hover .row-title { background-size: 100% 1.5px; }
   a.brow:hover { background-size: 100% 100%; }
   a.brow:hover .b-title .t { transform: translateX(6px); }
