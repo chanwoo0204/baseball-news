@@ -17,7 +17,7 @@ window.SITE_CONFIG = {
   INSTAGRAM_URL: 'https://www.instagram.com/baseballkorea_official/',
 
   // 뉴스 카테고리 — 자유롭게 추가/삭제하세요
-  CATEGORIES: ['이적', '인터뷰', '스카우팅', '드래프트', '칼럼'],
+  CATEGORIES: ['스카우팅', '드래프트'],
 
   // 게시판 말머리 — 자유롭게 추가/삭제하세요 ('공지'는 관리자 전용으로 자동 추가됩니다)
   BOARD_CATEGORIES: ['잡담', '경기', '질문', '정보'],
