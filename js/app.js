@@ -217,7 +217,8 @@
           leadSlider(slides) +
           (side.length ? '<div class="side">' + side.map((a) => story(a, 'side')).join('') + '</div>' : '') +
           (popular.length ? '<aside class="popular"><h2>가장 많이 읽은 기사</h2><ol>' + popular.map((a, i) =>
-            '<li><a href="#/article/' + a.id + '"><span class="rank">' + (i + 1) + '</span><span>' + esc(a.title) + '</span></a></li>').join('') +
+            '<li><a href="#/article/' + a.id + '"><span class="rank">' + (i + 1) + '</span>' +
+              '<span class="pop-text"><small>' + esc(a.category) + '</small><span class="pop-title">' + esc(a.title) + '</span></span></a></li>').join('') +
             '</ol></aside>' : '') +
         '</section>' +
         (rest.length
