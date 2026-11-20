@@ -429,6 +429,17 @@ a.brow:visited .b-title .t { color: var(--mute); }
   .grid { gap: 24px; }
   .story-text { padding-top: 10px; }
   .story-lead .story-title { font-size: 24px; }
+  /* 휴대폰: 작은 기사도 글을 사진 안에 */
+  .story-side, .story-grid { position: relative; border-radius: 6px; overflow: hidden; }
+  .story-side .ph, .story-grid .ph { aspect-ratio: 4 / 3; border-radius: 0; }
+  .story-side .story-text, .story-grid .story-text {
+    position: absolute; left: 0; right: 0; bottom: 0; padding: 64px 16px 16px; color: var(--white);
+    background: linear-gradient(to top, rgba(0, 0, 0, 0.82) 0%, rgba(0, 0, 0, 0.45) 55%, rgba(0, 0, 0, 0) 100%);
+  }
+  .story-side .cat, .story-grid .cat { color: var(--white); opacity: 0.9; }
+  .story-side .story-title, .story-grid .story-title { font-size: 18px; margin: 3px 0 4px; }
+  .story-side .meta, .story-grid .meta { color: rgba(255, 255, 255, 0.72); }
+  .story-side .meta span + span::before, .story-grid .meta span + span::before { background: rgba(255, 255, 255, 0.4); }
   .story-title { margin: 3px 0 6px; }
   .sec { margin: 40px 0 14px; }
   .top { padding: 0 6px; }
