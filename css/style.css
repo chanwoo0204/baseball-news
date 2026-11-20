@@ -132,7 +132,7 @@ h1, h2, h3 { margin: 0; }
 .top-stories { display: grid; gap: 28px; padding-top: 6px; }
 /* 큰 기사: 사진을 크게, 글은 사진 안 아래쪽에 */
 .story-lead { position: relative; border-radius: 6px; overflow: hidden; }
-.story-lead .ph { aspect-ratio: 4 / 5; border-radius: 0; }
+.story-lead .ph { aspect-ratio: 1 / 1; border-radius: 0; }
 .story-lead .story-text {
   position: absolute; left: 0; right: 0; bottom: 0; padding: 96px 22px 26px; color: var(--white);
   background: linear-gradient(to top, rgba(0, 0, 0, 0.82) 0%, rgba(0, 0, 0, 0.5) 50%, rgba(0, 0, 0, 0) 100%);
