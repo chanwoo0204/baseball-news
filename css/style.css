@@ -91,13 +91,13 @@ h1, h2, h3 { margin: 0; }
 .admin-link { margin-left: auto; font-size: 13px; font-weight: 700; color: var(--accent); }
 
 /* ── 카테고리 줄 ── */
-.chips { display: flex; align-items: center; gap: 24px; max-width: 1360px; margin: 0 auto; padding: 14px 24px; overflow-x: auto; scrollbar-width: none; }
+.chips { display: flex; align-items: center; gap: 24px; max-width: 1200px; margin: 0 auto; padding: 14px 24px; overflow-x: auto; scrollbar-width: none; }
 .chips::-webkit-scrollbar { display: none; }
 .chip { flex: none; font-size: 15px; font-weight: 600; color: var(--mute); transition: color 0.2s; }
 .chip.on { color: var(--ink); }
 
 /* ── 첫 화면 ── */
-.wide { max-width: 1360px; margin: 0 auto; padding: 2px 24px 80px; }
+.wide { max-width: 1200px; margin: 0 auto; padding: 2px 24px 80px; }
 .sec { font-size: 20px; font-weight: 800; letter-spacing: -0.03em; margin: 56px 0 18px; }
 .sec a { display: inline-block; }
 .cat-title { font-weight: 800; font-size: 34px; letter-spacing: -0.04em; margin: 16px 0 30px; }
@@ -115,14 +115,14 @@ h1, h2, h3 { margin: 0; }
   font-size: 12px; font-weight: 700; line-height: 1;
   opacity: 0; transform: translateY(8px); transition: opacity 0.3s, transform 0.4s var(--ease);
 }
-.story-text { display: block; padding-top: 14px; }
-.cat { display: inline-block; font-size: 13px; font-weight: 700; color: var(--accent); }
-.story-title { display: block; font-weight: 700; font-size: 19px; line-height: 1.42; letter-spacing: -0.03em; margin: 4px 0 8px; }
+.story-text { display: block; padding-top: 10px; }
+.cat { display: inline-block; font-size: 13px; font-weight: 700; line-height: 1.4; color: var(--accent); }
+.story-title { display: block; font-weight: 700; font-size: 19px; line-height: 1.32; letter-spacing: -0.03em; margin: 2px 0 5px; }
 .story-title span, .mini-title span, .b-title .t, .row-title {
   background-image: linear-gradient(currentColor, currentColor); background-repeat: no-repeat;
   background-position: 0 100%; background-size: 0 1.5px; transition: background-size 0.45s var(--ease);
 }
-.story-sum { display: block; font-size: 16px; line-height: 1.6; color: var(--sub); margin-bottom: 10px; }
+.story-sum { display: block; font-size: 16px; line-height: 1.45; color: var(--sub); margin-bottom: 6px; }
 .meta { font-size: 13px; color: var(--mute); margin: 0; }
 .meta span + span, .meta b + span, .meta span + button { margin-left: 10px; }
 .meta span + span::before, .meta b + span::before { content: ''; display: inline-block; width: 1px; height: 10px; background: #d5d5d9; margin-right: 10px; vertical-align: -1px; }
@@ -138,7 +138,7 @@ h1, h2, h3 { margin: 0; }
   background: linear-gradient(to top, rgba(0, 0, 0, 0.82) 0%, rgba(0, 0, 0, 0.5) 50%, rgba(0, 0, 0, 0) 100%);
 }
 .story-lead .cat { color: var(--white); opacity: 0.9; }
-.story-lead .story-title { font-size: 26px; font-weight: 800; line-height: 1.3; letter-spacing: -0.04em; margin: 6px 0 10px; max-width: 900px; }
+.story-lead .story-title { font-size: 26px; font-weight: 800; line-height: 1.22; letter-spacing: -0.04em; margin: 2px 0 6px; max-width: 900px; }
 .story-lead .story-sum { color: rgba(255, 255, 255, 0.86); max-width: 760px; }
 .story-lead .meta { color: rgba(255, 255, 255, 0.72); }
 .story-lead .meta span + span::before { background: rgba(255, 255, 255, 0.4); }
@@ -416,9 +416,19 @@ a.brow:visited .b-title .t { color: var(--mute); }
   .home-bottom { grid-template-columns: minmax(0, 2fr) minmax(0, 1fr); }
   .article h1 { font-size: 40px; }
 }
+@media (min-width: 900px) {
+  /* 큰 기사 높이를 왼쪽 작은 기사 두 개의 높이에 딱 맞춥니다 */
+  .top-stories { grid-template-columns: 1fr 2fr; gap: 24px; align-items: stretch; }
+  .side { gap: 18px; }
+  .story-side .ph { aspect-ratio: 16 / 9; }
+  .lead-slider, .lead-slider .slides, .lead-slider .slide, .top-stories .story-lead { height: 100%; }
+  .top-stories .story-lead .ph { aspect-ratio: auto; height: 100%; min-height: 400px; }
+  .story-lead .story-text { padding: 80px 28px 22px; }
+  .story-lead .story-title { font-size: 32px; }
+  .story-lead .story-sum { font-size: 16px; }
+}
 @media (min-width: 1200px) {
   .grid { grid-template-columns: repeat(4, 1fr); }
-  .top-stories { grid-template-columns: 1fr 2.2fr; }
 }
 @media (max-width: 640px) {
   :root { --top: 56px; }
