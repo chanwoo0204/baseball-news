@@ -40,6 +40,12 @@
     if (sameDay) return two(d.getHours()) + ':' + two(d.getMinutes());
     return String(d.getFullYear()).slice(2) + '.' + two(d.getMonth() + 1) + '.' + two(d.getDate());
   }
+  // 기사에 붙는 날짜: 26.11.20 처럼
+  function ymd(iso) {
+    const d = new Date(iso);
+    if (isNaN(d)) return '';
+    return String(d.getFullYear()).slice(2) + '.' + two(d.getMonth() + 1) + '.' + two(d.getDate());
+  }
   // http(s) 주소만 사진/링크로 허용
   function safeUrl(url) {
     return /^https?:\/\//i.test(url || '') ? url : '';
@@ -106,7 +112,7 @@
         '<span class="cat">' + esc(a.category) + '</span>' +
         '<strong class="story-title"><span>' + esc(a.title) + '</span></strong>' +
         (kind === 'lead' && a.summary ? '<span class="story-sum">' + esc(a.summary) + '</span>' : '') +
-        '<span class="meta">' + (a.author_name ? '<span>' + esc(a.author_name) + '</span>' : '') + '<span>' + fmtDate(a.created_at) + '</span>' +
+        '<span class="meta">' + (a.author_name ? '<span>' + esc(a.author_name) + '</span>' : '') + '<span>' + ymd(a.created_at) + '</span>' +
           (a.comment_count ? '<span>댓글 ' + a.comment_count + '</span>' : '') + '</span>' +
       '</span></a>';
   }
@@ -252,8 +258,8 @@
       '<div class="byline">' +
         '<div class="byline-who">' +
           (a.author_name ? '<b>' + esc(a.author_name) + '</b>' : '') +
-          '<span>입력 ' + fullDate(a.created_at) + '</span>' +
-          (edited ? '<span>수정 ' + fullDate(a.updated_at) + '</span>' : '') +
+          '<span>입력 ' + ymd(a.created_at) + '</span>' +
+          (edited ? '<span>수정 ' + ymd(a.updated_at) + '</span>' : '') +
         '</div>' +
         '<div class="byline-tools">' +
           '<button type="button" class="tool-btn" data-size="-1" aria-label="글자 작게">가<small>−</small></button>' +
