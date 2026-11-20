@@ -200,7 +200,7 @@
   }
   async function viewHome() {
     const res = await Promise.all([API.homeArticles(), API.listInstaPosts(6).catch(() => []),
-      API.popularArticles ? API.popularArticles(8).catch(() => []) : []]);
+      API.popularArticles ? API.popularArticles(6).catch(() => []) : []]);
     const popular = res[2] || [];
     const list = res[0];
     const bottom = instaSection(res[1]) + storeWide();
