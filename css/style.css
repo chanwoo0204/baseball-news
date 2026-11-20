@@ -48,6 +48,7 @@ h1, h2, h3 { margin: 0; }
 #authLink { display: inline-block; max-width: 110px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .logo { display: inline-flex; align-items: center; gap: 9px; font-weight: 800; font-size: 20px; letter-spacing: 0.06em; white-space: nowrap; transition: letter-spacing 0.5s var(--ease); }
 .logo-mark { height: 34px; width: auto; transition: transform 0.5s var(--ease); }
+.logo-wordmark { height: 34px; width: auto; display: block; }
 
 /* 밑줄이 왼쪽에서 그어지는 링크 */
 .top-right a, .chip { position: relative; padding: 4px 0; }
@@ -473,6 +474,7 @@ a.brow:visited .b-title .t { color: var(--mute); }
   .top { padding: 0 6px; }
   .logo { font-size: 15px; gap: 6px; letter-spacing: 0.03em; }
   .logo-mark { height: 26px; }
+  .logo-wordmark { height: 27px; }
   .top-right { gap: 14px; padding-right: 4px; font-size: 13px; }
   .top-nav { gap: 14px; }
   .top-nav [data-nav="news"], .top-nav [data-nav="store"] { display: none; }
