@@ -173,7 +173,7 @@
           '<div class="editor rich" id="editor" contenteditable="true" role="textbox" aria-multiline="true" aria-label="본문">' + bodyHtml + '</div>' +
           '<input type="file" id="bodyImage" accept="image/*" hidden>' +
           '<input type="file" id="bodyVideo" accept="video/mp4,video/webm,video/quicktime" hidden>' +
-          '<p class="hint">사진·동영상·유튜브는 커서를 둔 자리에 들어갑니다. 그 아래 회색 칸에 설명을 쓸 수 있습니다. 다른 곳에서 글을 복사해 붙여넣으면 서식이 정리되어 들어갑니다.</p>' +
+          '<p class="hint">사진·동영상·유튜브는 커서를 둔 자리에 들어갑니다. 그 아래 회색 칸에 설명을 쓰고, 넣은 뒤에는 바로 아래에 이어서 본문을 쓸 수 있습니다. 설명 칸에서 Enter 를 누르면 본문으로 넘어갑니다. 다른 곳에서 글을 복사해 붙여넣으면 서식이 정리되어 들어갑니다.</p>' +
         '</div>' +
         '<div class="write-side">' +
           '<div class="card box">' +
@@ -264,9 +264,67 @@
         if (r.intersectsNode(sp)) sp.replaceWith(...Array.from(sp.childNodes));
       });
     }
-    function insertFigure(url) {
-      exec('insertHTML', '<figure><img src="' + esc(url) + '" alt=""><figcaption></figcaption></figure><p><br></p>');
+    // 커서를 문단 맨 앞에 둡니다
+    function caretInto(p) {
+      const r = document.createRange();
+      r.setStart(p, 0);
+      r.collapse(true);
+      const sel = getSelection();
+      sel.removeAllRanges();
+      sel.addRange(r);
+      keep();
     }
+    // 사진·동영상 바로 아래 문단을 찾고, 없으면 만듭니다
+    function paragraphAfter(fig) {
+      let next = fig.nextElementSibling;
+      if (!next || next.tagName !== 'P') {
+        next = document.createElement('p');
+        next.innerHTML = '<br>';
+        fig.after(next);
+      }
+      return next;
+    }
+    // 사진·동영상을 넣고, 커서를 그 아래 새 문단으로 옮겨 바로 이어서 글을 쓸 수 있게 합니다
+    function insertMedia(inner) {
+      const mark = 'm' + Date.now();
+      exec('insertHTML', '<figure data-new="' + mark + '">' + inner + '<figcaption></figcaption></figure><p><br></p>');
+      const fig = editor.querySelector('figure[data-new="' + mark + '"]');
+      if (!fig) return;
+      fig.removeAttribute('data-new');
+      // 문단 안에 끼어 들어갔으면 문단 밖으로 꺼냅니다
+      const holder = fig.parentElement;
+      if (holder && holder !== editor && holder.tagName === 'P') holder.after(fig);
+      caretInto(paragraphAfter(fig));
+      ensureTail();
+    }
+    // 본문 맨 끝이 사진·동영상·구분선이면 빈 문단을 붙여, 그 아래를 눌러 글을 쓸 수 있게 합니다
+    function ensureTail() {
+      const last = editor.lastElementChild;
+      if (last && /^(FIGURE|HR|BLOCKQUOTE|UL|OL)$/.test(last.tagName)) {
+        const p = document.createElement('p');
+        p.innerHTML = '<br>';
+        editor.appendChild(p);
+      }
+    }
+    function insertFigure(url) {
+      insertMedia('<img src="' + esc(url) + '" alt="">');
+    }
+    ensureTail();
+    // 사진 설명 칸에서 Enter 를 누르면 사진 아래 본문으로 넘어갑니다 (Shift+Enter 는 설명 줄바꿈)
+    editor.addEventListener('keydown', (e) => {
+      if (e.key !== 'Enter' || e.shiftKey || e.isComposing) return;
+      const sel = getSelection();
+      const cap = sel.rangeCount && sel.anchorNode && (sel.anchorNode.nodeType === 1 ? sel.anchorNode : sel.anchorNode.parentElement).closest('figcaption');
+      if (!cap || !editor.contains(cap)) return;
+      e.preventDefault();
+      caretInto(paragraphAfter(cap.closest('figure')));
+    });
+    // 사진·동영상 아래 빈 곳을 누르면 그 아래 문단으로 커서를 옮깁니다
+    editor.addEventListener('click', (e) => {
+      const fig = e.target.closest('figure');
+      if (!fig || e.target.closest('figcaption')) return;
+      caretInto(paragraphAfter(fig));
+    });
 
     const bar = document.getElementById('toolbar');
     bar.addEventListener('mousedown', (e) => { if (e.target.closest('button')) e.preventDefault(); });
@@ -285,7 +343,7 @@
       else if (cmd === 'video') document.getElementById('bodyVideo').click();
       else if (cmd === 'youtube') {
         const src = Rich.youtubeEmbed(window.prompt('유튜브 영상 주소를 붙여넣으세요', 'https://www.youtube.com/watch?v='));
-        if (src) exec('insertHTML', '<figure><iframe src="' + esc(src) + '"></iframe><figcaption></figcaption></figure><p><br></p>');
+        if (src) insertMedia('<iframe src="' + esc(src) + '"></iframe>');
         else toast('유튜브 영상 주소를 확인해 주세요');
       }
       else if (cmd === 'clear') { exec('removeFormat'); clearSpans(); }
@@ -320,7 +378,7 @@
       toast('동영상 올리는 중. 크기에 따라 시간이 걸립니다.');
       try {
         const url = await API.uploadImage(file);
-        exec('insertHTML', '<figure><video src="' + esc(url) + '" controls></video><figcaption></figcaption></figure><p><br></p>');
+        insertMedia('<video src="' + esc(url) + '" controls></video>');
         toast('동영상을 넣었습니다');
       } catch (err) { fail(err); }
     });
@@ -340,7 +398,7 @@
       if (html) exec('insertHTML', Rich.sanitize(html));
       else exec('insertText', cd.getData('text/plain'));
     });
-    editor.addEventListener('input', changed);
+    editor.addEventListener('input', () => { changed(); ensureTail(); });
     form.addEventListener('input', changed);
 
     // 대표 사진

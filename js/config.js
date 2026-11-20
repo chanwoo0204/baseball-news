@@ -14,7 +14,7 @@ window.SITE_CONFIG = {
   STORE_URL: 'https://smartstore.naver.com/baseballkorea',
 
   // 인스타그램 주소 (예: 'https://www.instagram.com/계정이름/')
-  INSTAGRAM_URL: '',
+  INSTAGRAM_URL: 'https://www.instagram.com/baseballkorea_official/',
 
   // 뉴스 카테고리 — 자유롭게 추가/삭제하세요
   CATEGORIES: ['이적', '인터뷰', '스카우팅', '드래프트', '칼럼'],
