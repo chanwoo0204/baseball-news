@@ -147,6 +147,16 @@
       '</div>' +
     '</div>';
   }
+  // 많이 읽은 기사: 큰 기사 높이에 들어가는 만큼만 보여줍니다
+  function fitPopular() {
+    const box = app.querySelector('.popular');
+    if (!box) return;
+    const items = Array.from(box.querySelectorAll('li'));
+    items.forEach((li) => { li.hidden = false; });
+    if (getComputedStyle(box).overflow !== 'hidden') return;
+    for (let i = items.length - 1; i > 2 && box.scrollHeight > box.clientHeight + 1; i--) items[i].hidden = true;
+  }
+  window.addEventListener('resize', () => fitPopular());
   let sliderTimer = null;
   function bindSlider() {
     clearInterval(sliderTimer);
@@ -200,7 +210,7 @@
   }
   async function viewHome() {
     const res = await Promise.all([API.homeArticles(), API.listInstaPosts(6).catch(() => []),
-      API.popularArticles ? API.popularArticles(6).catch(() => []) : []]);
+      API.popularArticles ? API.popularArticles(12).catch(() => []) : []]);
     const popular = res[2] || [];
     const list = res[0];
     const bottom = instaSection(res[1]) + storeWide();
@@ -218,7 +228,7 @@
           (side.length ? '<div class="side">' + side.map((a) => story(a, 'side')).join('') + '</div>' : '') +
           (popular.length ? '<aside class="popular"><h2>가장 많이 읽은 기사</h2><ol>' + popular.map((a, i) =>
             '<li><a href="#/article/' + a.id + '"><span class="rank">' + (i + 1) + '</span>' +
-              '<span class="pop-text"><small>' + esc(a.category) + '</small><span class="pop-title">' + esc(a.title) + '</span></span></a></li>').join('') +
+              '<span class="pop-title">' + esc(a.title) + '</span></a></li>').join('') +
             '</ol></aside>' : '') +
         '</section>' +
         (rest.length
@@ -811,6 +821,7 @@
     bindLoginForm();
     bindArticle();
     bindSlider();
+    fitPopular();
     loadInstaEmbeds();
     bindReturnLinks(app);
     app.querySelectorAll('.comments').forEach(mountComments);
