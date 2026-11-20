@@ -200,47 +200,6 @@ h1, h2, h3 { margin: 0; }
 .insta-grid iframe { min-width: 0 !important; }
 .insta-sec + .store-wide { margin-top: 56px; }
 
-/* 공지사항 · 일정 */
-.home-info { display: grid; grid-template-columns: minmax(0, 1fr); gap: 0 40px; }
-.box-head { display: flex; align-items: baseline; justify-content: space-between; margin: 56px 0 14px; }
-.box-head .sec { margin: 0; }
-.more { font-size: 13px; font-weight: 600; color: var(--mute); }
-.empty-note { color: var(--mute); font-size: 14px; padding: 18px 0; margin: 0; border-top: 1px solid var(--ink); }
-.pin, .mini-title em.pin { font-style: normal; margin-left: 0; font-size: 11px; font-weight: 700; color: var(--white); background: var(--accent); border-radius: 4px; padding: 2px 6px; margin-right: 8px; vertical-align: 1px; }
-.cal { display: grid; grid-template-columns: repeat(7, 1fr); gap: 2px; border-top: 1px solid var(--ink); padding-top: 10px; }
-.cal-w { text-align: center; font-size: 12px; font-weight: 600; color: var(--mute); padding: 4px 0 8px; }
-.cal-w.sun { color: var(--red); }
-.cal-w.sat { color: #1e5bd8; }
-.cal-d { position: relative; display: flex; flex-direction: column; align-items: center; gap: 3px; min-height: 46px; padding: 6px 0; border-radius: 8px; font-size: 14px; }
-.cal-d b { font-weight: 500; width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; border-radius: 50%; }
-.cal-d.today b { background: var(--ink); color: var(--white); font-weight: 700; }
-.cal-d.has b { font-weight: 700; }
-.cal-d.sel { background: var(--soft); }
-a.cal-d { transition: background-color 0.2s; }
-.dots { display: flex; gap: 3px; }
-.dots i, .cal-legend i { display: inline-block; width: 6px; height: 6px; border-radius: 50%; }
-.k-game { background: #d0302f; }
-.k-event { background: #1e5bd8; }
-.k-mag { background: #10264a; }
-.k-etc { background: #9aa0a6; }
-.cal-legend { display: flex; flex-wrap: wrap; gap: 6px 16px; font-size: 12px; color: var(--sub); margin: 4px 0 12px; }
-.cal-legend span { display: inline-flex; align-items: center; gap: 6px; }
-.ev-list { list-style: none; padding: 0; margin: 12px 0 0; }
-.ev { display: grid; grid-template-columns: 46px auto 1fr; gap: 10px; align-items: baseline; padding: 10px 0; border-bottom: 1px solid var(--line); font-size: 14px; }
-.ev-day { font-weight: 700; font-variant-numeric: tabular-nums; }
-.ev-kind { font-size: 11px; font-weight: 700; color: var(--white); padding: 2px 7px; border-radius: 4px; }
-.ev-title { min-width: 0; }
-.ev-title small { display: block; font-size: 12px; color: var(--mute); margin-top: 2px; }
-.schedule { max-width: 860px; }
-.month-nav { display: flex; gap: 6px; flex-wrap: wrap; }
-.schedule .cal { margin-bottom: 24px; }
-.schedule .cal-d { min-height: 64px; }
-.ev-group { padding: 4px 12px 8px; border-radius: 10px; margin-bottom: 8px; }
-.ev-group h3 { font-size: 15px; font-weight: 800; margin: 10px 0 0; }
-.ev-group.sel { background: var(--soft); }
-.ev-group .ev-list { margin-top: 4px; }
-.ev-group .ev:last-child { border-bottom: 0; }
-
 /* 첫 화면 아래 길게: 매거진 구매 */
 .store-wide {
   display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 20px 32px;
@@ -400,8 +359,6 @@ a.brow:visited .b-title .t { color: var(--mute); }
   .logo:hover { letter-spacing: 0.1em; }
   .logo:hover .logo-mark { transform: rotate(-6deg) scale(1.06); }
   .lead-slider:hover .sl-btn { opacity: 1; }
-  a.cal-d:hover { background: var(--soft); }
-  .more:hover { color: var(--ink); }
   .sl-btn:hover { transform: scale(1.08); }
   .insta-go:hover { border-color: var(--ink); transform: translateY(-2px); }
   .insta-go:hover .insta-logo { transform: rotate(-8deg) scale(1.1); }
@@ -457,7 +414,6 @@ a.brow:visited .b-title .t { color: var(--mute); }
   .story-lead .story-title { font-size: 38px; }
   .story-lead .story-sum { font-size: 17px; }
   .home-bottom { grid-template-columns: minmax(0, 2fr) minmax(0, 1fr); }
-  .home-info { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
   .article h1 { font-size: 40px; }
 }
 @media (min-width: 1200px) {
@@ -475,9 +431,6 @@ a.brow:visited .b-title .t { color: var(--mute); }
   .story-lead .story-title { font-size: 24px; }
   .story-title { margin: 3px 0 6px; }
   .sec { margin: 40px 0 14px; }
-  .box-head { margin-top: 40px; }
-  .cal-d { min-height: 40px; }
-  .schedule .cal-d { min-height: 52px; }
   .top { padding: 0 6px; }
   .logo { font-size: 15px; gap: 6px; letter-spacing: 0.03em; }
   .logo-mark { height: 26px; }
